@@ -13,9 +13,9 @@ def job_already_submitted_exception(token):
 
 @app.errorhandler(400)
 def triplex_params_missing(token):
-    return f"Cannot receive job - 3plex params missing or incomplete", 4090
+    return f"Cannot receive job - 3plex params missing or incomplete", 400
 
-def parse_request_params(form):
+def parse_triplex_params(form):
     parameter_dict = {}
     parameter_dict['min_len'] = form['min_len']
     parameter_dict['max_len'] = form['max_len']
@@ -32,7 +32,8 @@ def submit_job(token):
     dsDNA_fasta = request.files['dsDNA_fasta']
     try:
         triplex_params = parse_triplex_params(request.form)
-    except Exception
+    except Exception:
+        return triplex_params_missing(token)
 
     try:
         os.mkdir(os.path.join(WORKING_DIR_PATH, token))
@@ -41,6 +42,7 @@ def submit_job(token):
     ssRNA_fasta.save(os.path.join(WORKING_DIR_PATH,token) + "/" + secure_filename(ssRNA_fasta.filename))
     dsDNA_fasta.save(os.path.join(WORKING_DIR_PATH,token) + "/" + secure_filename(dsDNA_fasta.filename))
     
-    rule = "snakemake -p -c1 working_dir/{token}/{ssRNA_fasta.filename}__{dsDNA_fasta.filename}.output.txt"
-    config_ = " --config " + " ".join([f"{key}=triplex_param[key]" for key in triplex_param.keys()])
+    rule = f"snakemake -p -c1 working_dir/{token}/{ssRNA_fasta.filename}__{dsDNA_fasta.filename}.output.txt"
+    config_ = " --config " + " ".join([f"{key}={triplex_params[key]}" for key in triplex_params.keys()])
+    print(rule + " " + config_)
     return f"Job with token {token} received"

@@ -1,0 +1,42 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job          count    min threads    max threads
+---------  -------  -------------  -------------
+run_3plex        1              1              1
+total            1              1              1
+
+Select jobs to execute...
+
+[Thu May 11 17:46:11 2023]
+rule run_3plex:
+    input: working_dir/14/TERC.fa, working_dir/14/TERC.pos_neg.bed.fa
+    output: working_dir/14/TERC.fa__TERC.pos_neg.bed.fa.output.txt
+    jobid: 0
+    reason: Missing output files: working_dir/14/TERC.fa__TERC.pos_neg.bed.fa.output.txt
+    wildcards: token=14, ssRNA=TERC.fa, dsDNA=TERC.pos_neg.bed.fa
+    resources: tmpdir=/mnt/nvme_raid0/tmp
+
+
+			docker run -u `id -u`:`id -g` --rm -v $PWD/working_dir/14:$PWD/working_dir/14 imolineris/3plex:v0.1.2-beta 				-j 1 -l 8 -L -1 -e 20 				-g 40 -r off -c 1 				-s 0 $PWD/working_dir/14/TERC.fa $PWD/working_dir/14/TERC.pos_neg.bed.fa \ 
+					$PWD/working_dir/14; 
+		echo "Job completed" > working_dir/14/TERC.fa__TERC.pos_neg.bed.fa.output.txt
+	
+[Thu May 11 17:46:12 2023]
+Error in rule run_3plex:
+    jobid: 0
+    input: working_dir/14/TERC.fa, working_dir/14/TERC.pos_neg.bed.fa
+    output: working_dir/14/TERC.fa__TERC.pos_neg.bed.fa.output.txt
+    shell:
+        
+			docker run -u `id -u`:`id -g` --rm -v $PWD/working_dir/14:$PWD/working_dir/14 imolineris/3plex:v0.1.2-beta 				-j 1 -l 8 -L -1 -e 20 				-g 40 -r off -c 1 				-s 0 $PWD/working_dir/14/TERC.fa $PWD/working_dir/14/TERC.pos_neg.bed.fa \ 
+					$PWD/working_dir/14; 
+		echo "Job completed" > working_dir/14/TERC.fa__TERC.pos_neg.bed.fa.output.txt
+	
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+Complete log: .snakemake/log/2023-05-11T174610.956144.snakemake.log
