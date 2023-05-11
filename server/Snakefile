@@ -1,0 +1,21 @@
+PWD=os.environ.get("PWD")
+configfile: "config.yaml"
+
+rule run_3plex:
+	input:
+		ssRNA_file="working_dir/{token}/{ssRNA}.fa",
+		dsDNA_file="working_dir/{token}/{dsDNA}.fa"
+	params:
+		params_instance=triplexator_paramspace.instance
+	output:
+        "working_dir/{token}/3plex.summary.gz"
+	threads: 1
+	shell: """
+		docker run -u `id -u`:`id -g` --rm -v $PWD/working_dir/{token}:$PWD/working_dir/{token} imolineris/3plex:v0.1.2-beta \
+            -j {threads} -l {config[min_len]} -L {config[max_len]} -e {config[error_rate]} \
+            -g {config[guanine_rate]} -r {config[filter_repeat]} -c {config[consecutive_errors]} \
+            -s {config[SSTRAND]} $PWD/{input.ssRNA_file} $PWD/{input.dsDNA_file} \ 
+                $PWD/working_dir/{token}; 
+        mv {ssRNA}_ssmasked-{ssRNA}.pos_neg.bed.tpx.summary.gz {output}; \
+		rm {ssRNA}_ssmasked-ssRNA}.pos_neg.bed.tpx.stability.gz
+	"""
