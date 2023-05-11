@@ -1,4 +1,6 @@
 PWD=os.environ.get("PWD")
+UID=os.environ.get("id -u")
+GID=os.environ.get("id -g")
 #Instead of using config.yaml, 3plex params are received from frontend and passed by server.py
 #configfile: "config.yaml"
 
@@ -11,13 +13,14 @@ rule run_3plex:
 		"working_dir/{token}/{ssRNA}__{dsDNA}__output.txt"
 	threads: 1
 	shell: """
-			docker run --rm -v {PWD}/working_dir/{wildcards.token}:{PWD}/working_dir/{wildcards.token} imolineris/3plex:v0.1.2-beta \
+			docker run --user `id -u`:`id -g` --rm -v {PWD}/working_dir/{wildcards.token}:{PWD}/working_dir/{wildcards.token} imolineris/3plex:v0.1.2-beta \
 				-j 1 -l {config[min_len]} -L {config[max_len]} -e {config[error_rate]} \
 				-g {config[guanine_rate]} -r {config[filter_repeat]} -c {config[consecutive_errors]} \
 				-s {config[SSTRAND]} {PWD}/{input.ssRNA_file} {PWD}/{input.dsDNA_file} \
 					{PWD}/working_dir/{wildcards.token}; 
-		echo "Job completed" > working_dir/{wildcards.token}/{wildcards.ssRNA}__{wildcards.dsDNA}_output.txt
+		echo "Job completed" > working_dir/{wildcards.token}/{wildcards.ssRNA}__{wildcards.dsDNA}__output.txt
 		curl -F SUMMARY=@{PWD}/working_dir/{wildcards.token}/{wildcards.ssRNA}_ssmasked-{wildcards.dsDNA}.tpx.summary.gz \
-			-F STABILITY=@{PWD}/working_dir/{wildcards.token}/{wildcards.ssRNA}_ssmasked-{wildcards.dsDNA}.tpx.stability.gz  http://localhost:8001/results/{wildcards.token}/submitresult/
-		rm -rf {PWD}/{wildcards.token}
+			-F STABILITY=@{PWD}/working_dir/{wildcards.token}/{wildcards.ssRNA}_ssmasked-{wildcards.dsDNA}.tpx.stability.gz \
+			  http://192.168.186.10:8001/results/submitresult/{wildcards.token}/
+		rm -rf {PWD}/working_dir/{wildcards.token}/
 	"""
