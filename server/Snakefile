@@ -5,16 +5,19 @@ PWD=os.environ.get("PWD")
 
 rule run_3plex:
 	input:
-		ssRNA_file="working_dir/{token}/{ssRNA}",
-		dsDNA_file="working_dir/{token}/{dsDNA}"
+		ssRNA_file="working_dir/{token}/{ssRNA}.fa",
+		dsDNA_file="working_dir/{token}/{dsDNA}.fa"
 	output:
-		"working_dir/{token}/{ssRNA}__{dsDNA}.output.txt"
+		"working_dir/{token}/{ssRNA}__{dsDNA}__output.txt"
 	threads: 1
 	shell: """
-			docker run -u `id -u`:`id -g` --rm -v $PWD/working_dir/{wildcards.token}:$PWD/working_dir/{wildcards.token} imolineris/3plex:v0.1.2-beta \
+			docker run --rm -v {PWD}/working_dir/{wildcards.token}:{PWD}/working_dir/{wildcards.token} imolineris/3plex:v0.1.2-beta \
 				-j 1 -l {config[min_len]} -L {config[max_len]} -e {config[error_rate]} \
 				-g {config[guanine_rate]} -r {config[filter_repeat]} -c {config[consecutive_errors]} \
-				-s {config[SSTRAND]} $PWD/{input.ssRNA_file} $PWD/{input.dsDNA_file} \ 
-					$PWD/working_dir/{wildcards.token}; 
-		echo "Job completed" > working_dir/{wildcards.token}/{wildcards.ssRNA}__{wildcards.dsDNA}.output.txt
+				-s {config[SSTRAND]} {PWD}/{input.ssRNA_file} {PWD}/{input.dsDNA_file} \
+					{PWD}/working_dir/{wildcards.token}; 
+		echo "Job completed" > working_dir/{wildcards.token}/{wildcards.ssRNA}__{wildcards.dsDNA}_output.txt
+		curl -F SUMMARY=@{PWD}/working_dir/{wildcards.token}/{wildcards.ssRNA}_ssmasked-{wildcards.dsDNA}.tpx.summary.gz \
+			-F STABILITY=@{PWD}/working_dir/{wildcards.token}/{wildcards.ssRNA}_ssmasked-{wildcards.dsDNA}.tpx.stability.gz  http://localhost:8001/results/{wildcards.token}/submitresult/
+		rm -rf {PWD}/{wildcards.token}
 	"""

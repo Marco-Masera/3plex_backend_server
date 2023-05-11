@@ -42,7 +42,9 @@ def submit_job(token):
     ssRNA_fasta.save(os.path.join(WORKING_DIR_PATH,token) + "/" + secure_filename(ssRNA_fasta.filename))
     dsDNA_fasta.save(os.path.join(WORKING_DIR_PATH,token) + "/" + secure_filename(dsDNA_fasta.filename))
     
-    rule = f"snakemake -p -c1 working_dir/{token}/{ssRNA_fasta.filename}__{dsDNA_fasta.filename}.output.txt"
+    rna_fn = "".join(ssRNA_fasta.filename.split(".")[:-1])
+    dna_fn = "".join(dsDNA_fasta.filename.split(".")[:-1])
+    rule = f"snakemake -p -c1 working_dir/{token}/{rna_fn}__{dna_fn}__output.txt"
     config_ = " --config " + " ".join([f"{key}={triplex_params[key]}" for key in triplex_params.keys()])
     print(rule + " " + config_)
     return f"Job with token {token} received"
