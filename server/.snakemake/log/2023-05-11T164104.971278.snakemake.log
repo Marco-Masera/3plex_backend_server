@@ -1,0 +1,10 @@
+Building DAG of jobs...
+File path working_dir//ciao/a.fa contains double '/'. This is likely unintended. It can also lead to inconsistent results of the file-matching approach used by Snakemake.
+File path working_dir//ciao/b.fa contains double '/'. This is likely unintended. It can also lead to inconsistent results of the file-matching approach used by Snakemake.
+MissingInputException in rule run_3plex_f in file /home/mmasera/3plex_backend_server/server/Snakefile, line 24:
+Missing input files for rule run_3plex_f:
+    output: working_dir/ciao/a.b.output.txt
+    wildcards: token=/ciao, ssRNA=a, dsDNA=b
+    affected files:
+        working_dir//ciao/a.fa
+        working_dir//ciao/b.fa

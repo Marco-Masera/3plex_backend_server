@@ -1,0 +1,27 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job            count    min threads    max threads
+-----------  -------  -------------  -------------
+run_3plex_f        1              1              1
+total              1              1              1
+
+Select jobs to execute...
+
+[Thu May 11 16:39:36 2023]
+rule run_3plex_f:
+    output: working_dir/ciao/output.txt
+    jobid: 0
+    reason: Missing output files: working_dir/ciao/output.txt
+    wildcards: token=/ciao
+    resources: tmpdir=/mnt/nvme_raid0/tmp
+
+
+		echo ciao > working_dir/ciao/output.txt
+	
+[Thu May 11 16:39:36 2023]
+Finished job 0.
+1 of 1 steps (100%) done
+Complete log: .snakemake/log/2023-05-11T163936.457907.snakemake.log

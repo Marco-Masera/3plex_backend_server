@@ -1,0 +1,2 @@
+SyntaxError in file /home/mmasera/3plex_backend_server/server/Snakefile, line 10:
+Unexpected keyword out in rule definition (Snakefile, line 10)

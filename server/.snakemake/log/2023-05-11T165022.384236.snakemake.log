@@ -1,0 +1,27 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job          count    min threads    max threads
+---------  -------  -------------  -------------
+run_3plex        1              1              1
+total            1              1              1
+
+Select jobs to execute...
+
+[Thu May 11 16:50:22 2023]
+rule run_3plex:
+    input: working_dir/ciao/TERC.fa, working_dir/ciao/TERC.pos_neg.bed.fa
+    output: working_dir/ciao/TERC.fa__TERC.pos_neg.bed.fa.output.txt
+    jobid: 0
+    reason: Missing output files: working_dir/ciao/TERC.fa__TERC.pos_neg.bed.fa.output.txt
+    wildcards: token=ciao, ssRNA=TERC.fa, dsDNA=TERC.pos_neg.bed.fa
+    resources: tmpdir=/mnt/nvme_raid0/tmp
+
+RuleException in rule run_3plex in file /home/mmasera/3plex_backend_server/server/Snakefile, line 6:
+AttributeError: 'Wildcards' object has no attribute 'ciao', when formatting the following:
+
+			echo {wildcards.ciao}
+		echo "Job completed" > working_dir/{wildcards.token}/{wildcards.ssRNA}__{wildcards.dsDNA}.output.txt
+	

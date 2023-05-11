@@ -1,0 +1,8 @@
+Building DAG of jobs...
+MissingInputException in rule run_3plex_f in file /home/mmasera/3plex_backend_server/server/Snakefile, line 24:
+Missing input files for rule run_3plex_f:
+    output: working_dir/ciao/TERC.FERC.pos_nega.bed.output.txt
+    wildcards: token=ciao, ssRNA=TERC.FERC.pos_nega, dsDNA=bed
+    affected files:
+        working_dir/ciao/TERC.FERC.pos_nega.fa
+        working_dir/ciao/bed.fa

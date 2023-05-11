@@ -1,0 +1,3 @@
+Building DAG of jobs...
+MissingRuleException:
+No rule to produce working_dir/ciao/ciao.fa.ciao2.fa.3plex.summary.gz (if you use input functions make sure that they don't raise unexpected exceptions).

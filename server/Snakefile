@@ -1,21 +1,22 @@
 PWD=os.environ.get("PWD")
-configfile: "config.yaml"
+#Instead of using config.yaml, 3plex params are received from frontend and passed by server.py
+#configfile: "config.yaml"
+
 
 rule run_3plex:
 	input:
-		ssRNA_file="working_dir/{token}/{ssRNA}.fa",
-		dsDNA_file="working_dir/{token}/{dsDNA}.fa"
-	params:
-		params_instance=triplexator_paramspace.instance
+		ssRNA_file="working_dir/{token}/{ssRNA}",
+		dsDNA_file="working_dir/{token}/{dsDNA}"
 	output:
-        "working_dir/{token}/3plex.summary.gz"
+		"working_dir/{token}/{ssRNA}__{dsDNA}.output.txt"
 	threads: 1
 	shell: """
-		docker run -u `id -u`:`id -g` --rm -v $PWD/working_dir/{token}:$PWD/working_dir/{token} imolineris/3plex:v0.1.2-beta \
-            -j {threads} -l {config[min_len]} -L {config[max_len]} -e {config[error_rate]} \
-            -g {config[guanine_rate]} -r {config[filter_repeat]} -c {config[consecutive_errors]} \
-            -s {config[SSTRAND]} $PWD/{input.ssRNA_file} $PWD/{input.dsDNA_file} \ 
-                $PWD/working_dir/{token}; 
-        mv {ssRNA}_ssmasked-{ssRNA}.pos_neg.bed.tpx.summary.gz {output}; \
-		rm {ssRNA}_ssmasked-ssRNA}.pos_neg.bed.tpx.stability.gz
+			docker run -u `id -u`:`id -g` --rm -v $PWD/working_dir/{token}:$PWD/working_dir/{token} imolineris/3plex:v0.1.2-beta \
+				-j 1 -l {config[min_len]} -L {config[max_len]} -e {config[error_rate]} \
+				-g {config[guanine_rate]} -r {config[filter_repeat]} -c {config[consecutive_errors]} \
+				-s {config[SSTRAND]} $PWD/{input.ssRNA_file} $PWD/{input.dsDNA_file} \ 
+					$PWD/working_dir/{token}; 
+			mv {ssRNA}_ssmasked-{ssRNA}.pos_neg.bed.tpx.summary.gz {output}; \
+			rm {ssRNA}_ssmasked-{ssRNA}.pos_neg.bed.tpx.stability.gz
+		echo "Job completed" > working_dir/{wildcards.token}/{wildcards.ssRNA}__{wildcards.dsDNA}.output.txt
 	"""
