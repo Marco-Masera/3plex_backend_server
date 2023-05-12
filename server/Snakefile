@@ -19,8 +19,4 @@ rule run_3plex:
 				-s {config[SSTRAND]} {PWD}/{input.ssRNA_file} {PWD}/{input.dsDNA_file} \
 					{PWD}/working_dir/{wildcards.token}; 
 		echo "Job completed" > working_dir/{wildcards.token}/{wildcards.ssRNA}__{wildcards.dsDNA}__output.txt
-		curl -F SUMMARY=@{PWD}/working_dir/{wildcards.token}/{wildcards.ssRNA}_ssmasked-{wildcards.dsDNA}.tpx.summary.gz \
-			-F STABILITY=@{PWD}/working_dir/{wildcards.token}/{wildcards.ssRNA}_ssmasked-{wildcards.dsDNA}.tpx.stability.gz \
-			  http://192.168.186.10:8001/results/submitresult/{wildcards.token}/
-		rm -rf {PWD}/working_dir/{wildcards.token}/
 	"""
