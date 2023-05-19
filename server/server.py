@@ -39,12 +39,12 @@ def execute_command(cmd, path):
     try:
         cwd = tempfile.mkdtemp(path)
         with subprocess.Popen(['/bin/bash', '-c', cmd], cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, bufsize=1) as p:
-            print("\n\nStdout:\n")
+            print("Stdout:")
             for line in p.stdout:
-                pass
-            print("\n\nStderr:\n")
+                print(line)
+            print("Stderr:")
             for line in p.stderr:
-                pass
+                print(line)
             return_code = p.wait()
     finally:
         try:
@@ -59,18 +59,18 @@ def ping_job_failed(token, output_dir, stderr=""):
     json_string = json.dumps(js)
     send_response = f"curl  -X POST -H \"Content-Type: application/json\" -d '{json_string}' http://192.168.186.10:8001/results/submiterror/{token}/"
     execute_command(f"{send_response}", token)
-    r = execute_command(f"rm -rf {output_dir}", token)
+    #r = execute_command(f"rm -rf {output_dir}", token)
 
 def ping_job_succeeded(token, output_dir, ssRNA, dsDNA):
     tries = 0
-    send_response = f"curl -F SUMMARY={output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.summary.gz -F STABILITY={output_dir}/{token}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.gz  http://192.168.186.10:8001/results/submitresult/{token}/"
+    send_response = f"curl http://192.168.186.10:8001/results/submitresult/{token}/ -F SUMMARY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.summary.gz -F STABILITY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.gz "
     while True:
         r = execute_command(f"{send_response}", token)
         if (r == 0):
             break
         if (tries >= 600):
             ping_job_failed(token, output_dir, "Cannot send data back to frontend")
-            return;
+            break
         tries += 1
         sleep(120)
     r = execute_command(f"rm -rf {output_dir}", token)
@@ -87,6 +87,7 @@ def submit_job(token):
         return triplex_params_missing(token)
     
     output_dir = os.path.join(WORKING_DIR_PATH, token)
+    if (output_dir[-1]=="/"): output_dir = output_dir[:-1]
     
     try:
         os.mkdir(output_dir)
