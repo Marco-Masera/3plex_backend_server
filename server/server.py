@@ -12,6 +12,8 @@ app = Flask(__name__)
 #Working dir is where temporary files will be stored before and during being processed
 SNAKEFILE_PATH = os.path.dirname(os.path.realpath(__file__))
 WORKING_DIR_PATH = os.path.join(SNAKEFILE_PATH, "working_dir")
+#Other params
+SERVER_URL = "http://192.168.186.10:8001"
 
 @app.errorhandler(409 )
 def job_already_submitted_exception(token):
@@ -57,13 +59,13 @@ def execute_command(cmd, path):
 def ping_job_failed(token, output_dir, stderr=""):
     js = {"reason": stderr}
     json_string = json.dumps(js)
-    send_response = f"curl  -X POST -H \"Content-Type: application/json\" -d '{json_string}' http://192.168.186.10:8001/results/submiterror/{token}/"
+    send_response = f"curl  -X POST -H \"Content-Type: application/json\" -d '{json_string}' {SERVER_URL}/results/submiterror/{token}/"
     execute_command(f"{send_response}", token)
     #r = execute_command(f"rm -rf {output_dir}", token)
 
 def ping_job_succeeded(token, output_dir, ssRNA, dsDNA):
     tries = 0
-    send_response = f"curl http://192.168.186.10:8001/results/submitresult/{token}/ -F SUMMARY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.summary.gz -F STABILITY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.gz "
+    send_response = f"curl {SERVER_URL}/results/submitresult/{token}/ -F SUMMARY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.summary.gz -F STABILITY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.gz "
     while True:
         r = execute_command(f"{send_response}", token)
         if (r == 0):

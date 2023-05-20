@@ -1,0 +1,3 @@
+server/env
+server/working_dir/*
+server/.snakemake
