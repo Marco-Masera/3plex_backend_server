@@ -1,6 +1,7 @@
 from flask import Flask, request,render_template,Response
 from werkzeug.utils import secure_filename
 import tempfile
+import hmac
 import subprocess
 from time import sleep
 import shutil
@@ -14,6 +15,9 @@ SNAKEFILE_PATH = os.path.dirname(os.path.realpath(__file__))
 WORKING_DIR_PATH = os.path.join(SNAKEFILE_PATH, "working_dir")
 #Other params
 SERVER_URL = "http://192.168.186.10:8001"
+#HMAC Secret key. Warning_ keep the key used in production safe
+HMAC_KEY = "YOU_WISH_YOU_KNEW_MY_SECRET_KEY!"
+
 
 @app.errorhandler(409 )
 def job_already_submitted_exception(token):
@@ -22,6 +26,11 @@ def job_already_submitted_exception(token):
 @app.errorhandler(400)
 def triplex_params_missing(token):
     return f"Cannot receive job - 3plex params missing or incomplete", 400
+
+def get_hashed(token):
+    h = hmac.new(bytes(HMAC_KEY, 'utf-8'), msg=bytes(token, 'utf-8'), digestmod='sha256')
+    digested = h.hexdigest()
+    return digested
 
 def parse_triplex_params(form):
     parameter_dict = {}
@@ -56,22 +65,21 @@ def execute_command(cmd, path):
     return return_code
 
          
-def ping_job_failed(token, output_dir, stderr=""):
-    js = {"reason": stderr}
-    json_string = json.dumps(js)
-    send_response = f"curl  -X POST -H \"Content-Type: application/json\" -d '{json_string}' {SERVER_URL}/results/submiterror/{token}/"
+def ping_job_failed(token, output_dir, htoken):
+    send_response = f"curl {SERVER_URL}/results/submiterror/{token}/ -F STDOUT=@{output_dir}/STDOUT STDERR=@{output_dir}/STDERR -F HTOKEN={htoken}"
     execute_command(f"{send_response}", token)
     #r = execute_command(f"rm -rf {output_dir}", token)
 
-def ping_job_succeeded(token, output_dir, ssRNA, dsDNA):
+def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken):
     tries = 0
-    send_response = f"curl {SERVER_URL}/results/submitresult/{token}/ -F SUMMARY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.summary.gz -F STABILITY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.gz "
+    send_response = f"curl {SERVER_URL}/results/submitresult/{token}/ -F SUMMARY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.summary.gz -F STABILITY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.gz -F HTOKEN={htoken}"
     while True:
-        r = execute_command(f"{send_response}", token)
+        r = execute_command(send_response, token)
         if (r == 0):
             break
-        if (tries >= 600):
-            ping_job_failed(token, output_dir, "Cannot send data back to frontend")
+        if (tries >= 300):
+            execute_command(f'ECHO "Network error" > {output_dir}/STDERR', token)
+            ping_job_failed(token, output_dir)
             break
         tries += 1
         sleep(120)
@@ -103,18 +111,23 @@ def submit_job(token):
     rna_fn = ssRNA_fasta.filename.removesuffix(f".{ssRNA_fasta.filename.split('.')[-1]}")
     dna_fn = dsDNA_fasta.filename.removesuffix(f".{dsDNA_fasta.filename.split('.')[-1]}")
     
-    rule = f"snakemake -p -c1 {output_dir}/{rna_fn}__{dna_fn}__output.txt"
-    config_ = " --config " + " ".join([f"{key}={triplex_params[key]}" for key in triplex_params.keys()])
     
+    rule=f"snakemake -p -c1 --slurm --default-resources --jobs 1  {output_dir}/{rna_fn}__{dna_fn}__output.txt"
+    rule_old = f"snakemake -p -c1 {output_dir}/{rna_fn}__{dna_fn}__output.txt"
+    config_ = " --config " + " ".join([f"{key}={triplex_params[key]}" for key in triplex_params.keys()])
+    srun_config = f'srun --job-name "{token}" --cpus-per-task=1 --mem=12G --nodelist=node3 --pty  '
+
     response = Response( f"Job with token {token} received" )
     
     @response.call_on_close
     def on_close():
+        hashed_token = get_hashed(token)
+
         return_code = execute_command(f"cd {SNAKEFILE_PATH} \n source env/bin/activate \n {rule} {config_} > {output_dir}/STDOUT 2>{output_dir}/STDERR", token)
         if (return_code==0):
-            ping_job_succeeded(token, output_dir, rna_fn, dna_fn)
+            ping_job_succeeded(token, output_dir, rna_fn, dna_fn, hashed_token)
         else:
-            ping_job_failed(token, output_dir)
+            ping_job_failed(token, output_dir, hashed_token)
     
     return response
     
