@@ -66,8 +66,16 @@ def execute_command(cmd, path):
 
          
 def ping_job_failed(token, output_dir, htoken):
-    send_response = f"curl {SERVER_URL}/results/submiterror/{token}/ -F STDOUT=@{output_dir}/STDOUT STDERR=@{output_dir}/STDERR -F HTOKEN={htoken}"
-    execute_command(f"{send_response}", token)
+    send_response = f"curl {SERVER_URL}/results/submiterror/{token}/ -F STDOUT=@{output_dir}/STDOUT -F STDERR=@{output_dir}/STDERR -F HTOKEN={htoken}"
+    tries = 0
+    while True:
+        r = execute_command(f"{send_response}", token)
+        if (r == 0):
+            break
+        if (tries >= 288):
+            break
+        tries += 1
+        sleep(300)
     #r = execute_command(f"rm -rf {output_dir}", token)
 
 def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken):
@@ -77,12 +85,12 @@ def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken):
         r = execute_command(send_response, token)
         if (r == 0):
             break
-        if (tries >= 300):
+        if (tries >= 288):
             execute_command(f'ECHO "Network error" > {output_dir}/STDERR', token)
             ping_job_failed(token, output_dir)
             break
         tries += 1
-        sleep(120)
+        sleep(300)
     r = execute_command(f"rm -rf {output_dir}", token)
 
 
@@ -112,7 +120,7 @@ def submit_job(token):
     dna_fn = dsDNA_fasta.filename.removesuffix(f".{dsDNA_fasta.filename.split('.')[-1]}")
     
     
-    rule=f"snakemake -p -c1 --slurm --default-resources --jobs 1  {output_dir}/{rna_fn}__{dna_fn}__output.txt"
+    rule=f"snakemake -c1 --slurm --default-resources --jobs 1  {output_dir}/{rna_fn}__{dna_fn}__output.txt"
     rule_old = f"snakemake -p -c1 {output_dir}/{rna_fn}__{dna_fn}__output.txt"
     config_ = " --config " + " ".join([f"{key}={triplex_params[key]}" for key in triplex_params.keys()])
     srun_config = f'srun --job-name "{token}" --cpus-per-task=1 --mem=12G --nodelist=node3 --pty  '

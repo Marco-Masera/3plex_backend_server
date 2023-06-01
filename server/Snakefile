@@ -12,12 +12,14 @@ rule run_3plex:
 		"{DATA_DIR}/{ssRNA}__{dsDNA}__output.txt"
 	threads: 1
 	resources:
+		partition="low",
 		mem_mb=4000
 	shell: """
-			docker run --user `id -u`:`id -g` --rm -v {wildcards.DATA_DIR}:{wildcards.DATA_DIR} imolineris/3plex:v0.1.2-beta \
+			docker run --user `id -u`:`id -g` --rm -v {wildcards.DATA_DIR}:{wildcards.DATA_DIR}  imolineris/3plex:v0.1.2-beta \
 				-j 1 -l {config[min_len]} -L {config[max_len]} -e {config[error_rate]} \
 				-g {config[guanine_rate]} -r {config[filter_repeat]} -c {config[consecutive_errors]} \
 				-s {config[SSTRAND]} {input.ssRNA_file} {input.dsDNA_file} \
 					{wildcards.DATA_DIR}; 
 		echo "Job completed" > {wildcards.DATA_DIR}/{wildcards.ssRNA}__{wildcards.dsDNA}__output.txt
 	"""
+	#docker run -u `id -u`:`id -g` --rm -v $PWD:$PWD -e ORIG_PWD=$PWD -it 3plex:v0.1.2-beta_it bash
