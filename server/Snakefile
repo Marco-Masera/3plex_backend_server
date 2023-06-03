@@ -9,7 +9,7 @@ rule run_3plex:
 		ssRNA_file="{DATA_DIR}/{ssRNA}.fa",
 		dsDNA_file="{DATA_DIR}/{dsDNA}.fa"
 	output:
-		"{DATA_DIR}/{ssRNA}__{dsDNA}__output.txt"
+		"{DATA_DIR}/{ssRNA}__{dsDNA}__output.txt",
 	threads: 1
 	resources:
 		partition="low",
@@ -20,6 +20,10 @@ rule run_3plex:
 				-g {config[guanine_rate]} -r {config[filter_repeat]} -c {config[consecutive_errors]} \
 				-s {config[SSTRAND]} {input.ssRNA_file} {input.dsDNA_file} \
 					{wildcards.DATA_DIR}; 
+		gzip -d {wildcards.DATA_DIR}/{wildcards.ssRNA}_ssmasked-dsDNA.tpx.stability.gz
+		cut -f 2,3,14 {wildcards.DATA_DIR}/{wildcards.ssRNA}_ssmasked-dsDNA.tpx.stability | unhead | bsort -k3,3nr -k1,1n  -S5% > {wildcards.DATA_DIR}/cutSort
+		./local/bin/tfo_c.py < {wildcards.DATA_DIR}/cutSort > {wildcards.DATA_DIR}/profilesJson
+		./local/bin/profile_to_ranges.py {wildcards.DATA_DIR} < {wildcards.DATA_DIR}/profilesJson
 		echo "Job completed" > {wildcards.DATA_DIR}/{wildcards.ssRNA}__{wildcards.dsDNA}__output.txt
 	"""
 	#docker run -u `id -u`:`id -g` --rm -v $PWD:$PWD -e ORIG_PWD=$PWD -it 3plex:v0.1.2-beta_it bash

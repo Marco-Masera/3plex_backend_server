@@ -32,8 +32,14 @@ def get_hashed(token):
     digested = h.hexdigest()
     return digested
 
+def validate_input_params(input_string):
+    return True
+    pattern = r'^[a-zA-Z0-9-_.]+$'
+    return re.match(pattern, input_string) is not None
+
 def parse_triplex_params(form):
     parameter_dict = {}
+    print(form)
     parameter_dict['min_len'] = form['min_len']
     parameter_dict['max_len'] = form['max_len']
     parameter_dict['error_rate'] = form['error_rate']
@@ -41,6 +47,12 @@ def parse_triplex_params(form):
     parameter_dict['filter_repeat'] = form['filter_repeat']
     parameter_dict['consecutive_errors'] = form['consecutive_errors']
     parameter_dict['SSTRAND'] = form['SSTRAND']
+    print(".")
+    for key in parameter_dict.keys():
+        print("..")
+        if (not validate_input_params(parameter_dict[key])):
+            print("!!")
+            raise Exception()
     return parameter_dict
 
 
@@ -80,7 +92,7 @@ def ping_job_failed(token, output_dir, htoken):
 
 def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken):
     tries = 0
-    send_response = f"curl {SERVER_URL}/results/submitresult/{token}/ -F SUMMARY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.summary.gz -F STABILITY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.gz -F HTOKEN={htoken}"
+    send_response = f"curl {SERVER_URL}/results/submitresult/{token}/ -F SUMMARY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.summary.gz -F STABILITY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability -F PROFILE=@{output_dir}/profile_range.msgpack -F HTOKEN={htoken}"
     while True:
         r = execute_command(send_response, token)
         if (r == 0):
@@ -92,7 +104,6 @@ def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken):
         tries += 1
         sleep(300)
     r = execute_command(f"rm -rf {output_dir}", token)
-
 
 
 @app.post("/submit/<token>")
@@ -131,7 +142,7 @@ def submit_job(token):
     def on_close():
         hashed_token = get_hashed(token)
 
-        return_code = execute_command(f"cd {SNAKEFILE_PATH} \n source env/bin/activate \n {rule} {config_} > {output_dir}/STDOUT 2>{output_dir}/STDERR", token)
+        return_code = execute_command(f"cd {SNAKEFILE_PATH} \n source env/bin/activate \n bioinfotree \n {rule} {config_} > {output_dir}/STDOUT 2>{output_dir}/STDERR", token)
         if (return_code==0):
             ping_job_succeeded(token, output_dir, rna_fn, dna_fn, hashed_token)
         else:
