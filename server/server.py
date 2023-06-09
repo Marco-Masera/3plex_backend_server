@@ -7,6 +7,7 @@ from time import sleep
 import shutil
 import json
 import os
+import re
 
 app = Flask(__name__)
 
@@ -33,13 +34,12 @@ def get_hashed(token):
     return digested
 
 def validate_input_params(input_string):
-    return True
+    #return True
     pattern = r'^[a-zA-Z0-9-_.]+$'
     return re.match(pattern, input_string) is not None
 
 def parse_triplex_params(form):
     parameter_dict = {}
-    print(form)
     parameter_dict['min_len'] = form['min_len']
     parameter_dict['max_len'] = form['max_len']
     parameter_dict['error_rate'] = form['error_rate']
@@ -51,7 +51,6 @@ def parse_triplex_params(form):
     for key in parameter_dict.keys():
         print("..")
         if (not validate_input_params(parameter_dict[key])):
-            print("!!")
             raise Exception()
     return parameter_dict
 
@@ -131,8 +130,7 @@ def submit_job(token):
     dna_fn = dsDNA_fasta.filename.removesuffix(f".{dsDNA_fasta.filename.split('.')[-1]}")
     
     
-    rule=f"snakemake -c1 --slurm --default-resources --jobs 1  {output_dir}/{rna_fn}__{dna_fn}__output.txt"
-    rule_old = f"snakemake -p -c1 {output_dir}/{rna_fn}__{dna_fn}__output.txt"
+    rule=f"snakemake -c1 --slurm --default-resources slurm_partition=low --jobs 1 {output_dir}/{rna_fn}__{dna_fn}__output.txt"
     config_ = " --config " + " ".join([f"{key}={triplex_params[key]}" for key in triplex_params.keys()])
     srun_config = f'srun --job-name "{token}" --cpus-per-task=1 --mem=12G --nodelist=node3 --pty  '
 

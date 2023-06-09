@@ -26,4 +26,3 @@ rule run_3plex:
 		./local/bin/profile_to_ranges.py {wildcards.DATA_DIR} < {wildcards.DATA_DIR}/profilesJson
 		echo "Job completed" > {wildcards.DATA_DIR}/{wildcards.ssRNA}__{wildcards.dsDNA}__output.txt
 	"""
-	#docker run -u `id -u`:`id -g` --rm -v $PWD:$PWD -e ORIG_PWD=$PWD -it 3plex:v0.1.2-beta_it bash
