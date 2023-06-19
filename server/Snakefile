@@ -20,9 +20,8 @@ rule run_3plex:
 				-g {config[guanine_rate]} -r {config[filter_repeat]} -c {config[consecutive_errors]} \
 				-s {config[SSTRAND]} {input.ssRNA_file} {input.dsDNA_file} \
 					{wildcards.DATA_DIR}; 
-		gzip -d {wildcards.DATA_DIR}/{wildcards.ssRNA}_ssmasked-dsDNA.tpx.stability.gz
-		cut -f 2,3,14 {wildcards.DATA_DIR}/{wildcards.ssRNA}_ssmasked-dsDNA.tpx.stability | unhead | bsort -k3,3nr -k1,1n  -S5% > {wildcards.DATA_DIR}/cutSort
-		./local/bin/tfo_c.py < {wildcards.DATA_DIR}/cutSort > {wildcards.DATA_DIR}/profilesJson
-		./local/bin/profile_to_ranges.py {wildcards.DATA_DIR} < {wildcards.DATA_DIR}/profilesJson
+					
+		zcat {wildcards.DATA_DIR}/{wildcards.ssRNA}_ssmasked-dsDNA.tpx.stability.gz | cut -f 2,3,14 | unhead | bsort -k3,3nr -k1,1n  -S5% > {wildcards.DATA_DIR}/cutSort
+		./local/bin/tfo_c.py {wildcards.DATA_DIR} < {wildcards.DATA_DIR}/cutSort
 		echo "Job completed" > {wildcards.DATA_DIR}/{wildcards.ssRNA}__{wildcards.dsDNA}__output.txt
 	"""
