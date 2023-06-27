@@ -13,14 +13,14 @@ def job_already_submitted_exception(token):
     return f"Job with token {token} already submitted", 409 
 
 @app.errorhandler(400)
-def triplex_params_missing(token):
+def config_params_missing(token):
     return f"Cannot receive job - 3plex params missing or incomplete", 400
 
 def validate_input_params(input_string):
     pattern = r'^[a-zA-Z0-9-_.]+$'
     return re.match(pattern, input_string) is not None
 
-def parse_triplex_params(form):
+def parse_config(form)
     parameter_dict = {}
     parameter_dict['min_length'] = form['min_len']
     parameter_dict['max_length'] = form['max_len']
@@ -51,9 +51,9 @@ def submit_job(token):
         species_fasta = "none"
 
     try:
-        triplex_params_formatted = parse_triplex_params(request.form)
+        config_formatted = parse_config(request.form)
     except Exception:
-        return triplex_params_missing(token)
+        return config_params_missing(token)
     
     if (dsdna_target is None):
         dsDNA_fasta = request.files['dsDNA_fasta']
@@ -84,7 +84,7 @@ def submit_job(token):
         link_dna = ""
     elif (dsdna_target is not None):
         dna_fn = "dsDNA"
-        link_dna = f"ln -s {dsdna_file_path} {output_dir}/{dna_fn}.fa \n"
+        link_dna = f"ln -s {dsdna_file_path} {output_dir}/{dna_fn}.fa; \n"
 
     #Now need to build the string containing the command to execute in shell:
     #Setting up: prepare environment to execute the snakemake rules
@@ -99,17 +99,24 @@ def submit_job(token):
         rna_fn = ssRNA_fasta.filename.removesuffix(f".{ssRNA_fasta.filename.split('.')[-1]}")
     
     #Need to link files inside the working directory
-    link_files = f"\n {link_dna} ln -s {SNAKEFILE_PATH} {output_dir} \n echo \"{triplex_params_formatted}\" > {output_dir}/config.yaml  \n cat {CONFIG_PATH} >> {output_dir}/config.yaml "
+    link_files = f"""{link_dna}
+ln -s {SNAKEFILE_PATH} {output_dir};
+ln -s {CONFIG_PATH} >> {output_dir}/config_general.yaml;
+echo \"{config_formatted}\" > {output_dir}/config.yaml;
+"""
     #Prepare the snakemake command
-    rule=f"snakemake -c12 --slurm --default-resources slurm_partition=low mem_mb=8000 --jobs 8 " \
-        f"{rna_fn}_ssmasked-{dna_fn}.tpx.summary.add_zeros.gz " \
-        f"{rna_fn}_ssmasked-{dna_fn}.tpx.stability.gz "  \
-        f"{rna_fn}_secondary_structure.msgpack {rna_fn}profile_range.msgpack "
+    rule=f"""
+snakemake -p {slurm_config} \
+    {rna_fn}_ssmasked-{dna_fn}.tpx.summary.add_zeros.gz \
+    {rna_fn}_ssmasked-{dna_fn}.tpx.stability.gz \
+    {rna_fn}_secondary_structure.msgpack {rna_fn}profile_range.msgpack\
+    > {output_dir}/STDOUT 2>{output_dir}/STDERR
+"""
     
     #Add config_, containing triplex parameters
     config_ = f" --config species_fasta={species_fasta} "
     #Assemble the complete command
-    command = f"{setting_up} {link_files} \n {rule} {config_} > {output_dir}/STDOUT 2>{output_dir}/STDERR"
+    command = f"{setting_up} {link_files} \n {rule} "
 
     #If no exceptions so far, can return a response
     response = Response( f"Job with token {token} received" )
