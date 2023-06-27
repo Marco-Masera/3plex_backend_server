@@ -1,5 +1,8 @@
 import os
 
+cores=32
+jobs=10
+
 DELETE_JOB_DIRECTORY_AFTER_SUCCESS = False
 
 #Genome Fasta files for each species
@@ -16,7 +19,7 @@ CONFIG_PATH = os.path.join(CURRENT_PATH, "3plex", "local", "config", "config_v1_
 WORKING_DIR_PATH = os.path.join(CURRENT_PATH, "3plex", "dataset", "jobs")
 BIN_PATH = os.path.join(CURRENT_PATH, "3plex", "local", "bin")
 BIOINFOTREE_ROOT = "/home/reference_data/bioinfotree/local/bin/"
-CONDA_ENV_PATH = "3plex_test" #"/home/imoliner/.conda/envs/3plex_test/"
+CONDA_ENV_PATH = "/home/mmasera/3plex_backend_server/server/3plex/local/envs/3plex"
 #Other params
 SERVER_URL = "http://192.168.186.10:8001"
 #HMAC Secret key. Warning_ keep the key used in production safe
@@ -33,3 +36,6 @@ else
         export PATH="/opt/conda/miniconda3/bin:$PATH"
     fi
 fi"""
+
+
+SLURM_CONFIG=f"--slurm --default-resources slurm_partition=low mem_mb=8000 --cores {cores} --jobs {jobs}"

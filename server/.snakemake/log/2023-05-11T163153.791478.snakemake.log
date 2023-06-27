@@ -1,4 +1,0 @@
-Building DAG of jobs...
-WildcardError in rule run_3plex_f in file /home/mmasera/3plex_backend_server/server/Snakefile, line 24:
-Wildcards in input files cannot be determined from output files:
-'ssRNA'

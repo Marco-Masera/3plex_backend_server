@@ -2,3 +2,4 @@ server/env
 server/working_dir/*
 server/.snakemake
 *.pyc
+**/__pycache__/
