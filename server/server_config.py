@@ -1,5 +1,7 @@
 import os
 
+DELETE_JOB_DIRECTORY_AFTER_SUCCESS = False
+
 #Genome Fasta files for each species
 GENOME_FASTA_FOR_SPECIES = {
     "hsapiens": "/home/reference_data/bioinfotree/task/gencode/dataset/hsapiens/42/GRCh38.primary_assembly.genome.fa",

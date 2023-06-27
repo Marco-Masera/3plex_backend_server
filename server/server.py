@@ -2,7 +2,6 @@ from flask import Flask, request,render_template,Response
 from werkzeug.utils import secure_filename
 import os
 import re
-
 from server_config import *
 from execute_rules_and_ping import call_on_close
 
