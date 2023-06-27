@@ -1,5 +1,7 @@
 import os
 
+threads=16
+
 DELETE_JOB_DIRECTORY_AFTER_SUCCESS = False
 
 #Genome Fasta files for each species
@@ -33,3 +35,6 @@ else
         export PATH="/opt/conda/miniconda3/bin:$PATH"
     fi
 fi"""
+
+
+SLURM_CONFIG=f"--slurm --default-resources slurm_partition=low mem_mb=8000 --jobs {threads}"
