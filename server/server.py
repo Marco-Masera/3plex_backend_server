@@ -39,36 +39,30 @@ def parse_config(triplex_params, other_params):
 @app.post("/submit/<token>")
 def submit_job(token):
     #Read input files
-    dsdna_target = request.args.get('dsdna_target')
+    dsDNA_predefined = request.args.get('dsdna_target')
     ssRNA_fasta = request.files['ssRNA_fasta']
     species = request.args.get('species')
-    if (species):
-        if (species in GENOME_FASTA_FOR_SPECIES):
-            species_fasta = GENOME_FASTA_FOR_SPECIES[species]
-        else:
-            return f"Species {species} not recognized", 404
-    else:
-        species_fasta = "none"
+    
 
     try:
         #Parse config generates string to be saved in the config.yaml file
         #First argument contains the form with 3plex parameters, second is a dict of any additional param
         #that does not belong to "triplexator:"
-        config_formatted = parse_config(request.form, {"species_fasta": species_fasta})
+        config_formatted = parse_config(request.form, {"species": species})
     except Exception:
         return config_params_missing(token)
     
-    if (dsdna_target is None):
+    if (dsDNA_predefined is None):
         dsDNA_fasta = request.files['dsDNA_fasta']
     else:
         dsDNA_fasta = None
         #Verify file exists
-        if ("/" in dsdna_target):
+        if ("/" in dsDNA_predefined):
             return "Illegal character in dsDNA", 400
-        dsdna_file_path = os.path.join(TARGET_DSDNA_PATH, dsdna_target)
-        print(dsdna_file_path)
-        if not (os.path.isfile(dsdna_file_path) or os.path.islink(dsdna_file_path)):
-            return f"dsDNA {dsdna_target} does not exist", 404
+        dsDNA_file_path = os.path.join(TARGET_DSDNA_PATH, dsDNA_predefined)
+        print(dsDNA_file_path)
+        if not (os.path.isfile(dsDNA_file_path) or os.path.islink(dsDNA_file_path)):
+            return f"dsDNA {dsDNA_predefined} does not exist", 404
     
     #Create directory to execute the job
     output_dir = os.path.join(WORKING_DIR_PATH, token)
@@ -85,9 +79,9 @@ def submit_job(token):
         dsDNA_fasta.save(output_dir + "/" + secure_filename(dsDNA_fasta.filename))
         dna_fn = dsDNA_fasta.filename.removesuffix(f".{dsDNA_fasta.filename.split('.')[-1]}")
         link_dna = ""
-    elif (dsdna_target is not None):
+    elif (dsDNA_predefined is not None):
         dna_fn = "dsDNA"
-        link_dna = f"ln -s {dsdna_file_path} {output_dir}/{dna_fn}.fa; \n"
+        link_dna = f"ln -s {dsDNA_file_path} {output_dir}/{dna_fn}.fa; \n"
 
     #Now need to build the string containing the command to execute in shell:
     #Setting up: prepare environment to execute the snakemake rules
@@ -105,6 +99,7 @@ def submit_job(token):
     link_files = f"""{link_dna}
 ln -s {SNAKEFILE_PATH} {output_dir};
 ln -s {CONFIG_PATH} {output_dir}/config_general.yaml;
+ln -s {CONFIG_SK} {output_dir}/config.sk;
 echo \"{config_formatted}\" > {output_dir}/config.yaml;
 """
 
