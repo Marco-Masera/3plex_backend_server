@@ -3,14 +3,15 @@ import os
 cores=32
 jobs=10
 
+
+
 DELETE_JOB_DIRECTORY_AFTER_SUCCESS = False
 
 #BASE VARIABLES
 CURRENT_PATH = os.path.dirname(os.path.realpath(__file__))
-TARGET_DSDNA_PATH = os.path.join(CURRENT_PATH, "local", "data", "target_dsdna")#local/data/target_dsdna
 SNAKEFILE_PATH = os.path.join(CURRENT_PATH, "3plex", "local", "rules", "Snakefile")
 CONFIG_PATH = os.path.join(CURRENT_PATH, "3plex", "local", "config", "config_v1_for_server.yaml")
-CONFIG_SK = os.path.join(CURRENT_PATH, "3plex", "local", "config", "config.sk")
+CONFIG_SK = os.path.join(CURRENT_PATH, "3plex", "local", "config", "config.smk")
 WORKING_DIR_PATH = os.path.join(CURRENT_PATH, "3plex", "dataset", "jobs")
 BIN_PATH = os.path.join(CURRENT_PATH, "3plex", "local", "bin")
 BIOINFOTREE_ROOT = "/home/reference_data/bioinfotree/local/bin/"

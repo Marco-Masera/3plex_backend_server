@@ -42,13 +42,27 @@ def submit_job(token):
     dsDNA_predefined = request.args.get('dsdna_target')
     ssRNA_fasta = request.files['ssRNA_fasta']
     species = request.args.get('species')
+
+    dsDNA_filename = "dsDNA" #TODO spostare in server_config.py
+    ssRNA_filename = "ssRNA" #TODO spostare in server_config.py
+
     
+
+    ##########################################
+    #
+    #  Inpt data validation
+    #
+
+    if ("/" in dsDNA_predefined):
+            return "Illegal character in dsDNA", 400
+
+    ##########################################
 
     try:
         #Parse config generates string to be saved in the config.yaml file
         #First argument contains the form with 3plex parameters, second is a dict of any additional param
         #that does not belong to "triplexator:"
-        config_formatted = parse_config(request.form, {"species": species})
+        config_formatted = parse_config(request.form, {"species": species, "dsDNA_predefined": dsDNA_predefined})
     except Exception:
         return config_params_missing(token)
     
@@ -56,14 +70,8 @@ def submit_job(token):
         dsDNA_fasta = request.files['dsDNA_fasta']
     else:
         dsDNA_fasta = None
-        #Verify file exists
-        if ("/" in dsDNA_predefined):
-            return "Illegal character in dsDNA", 400
-        dsDNA_file_path = os.path.join(TARGET_DSDNA_PATH, dsDNA_predefined)
-        print(dsDNA_file_path)
-        if not (os.path.isfile(dsDNA_file_path) or os.path.islink(dsDNA_file_path)):
-            return f"dsDNA {dsDNA_predefined} does not exist", 404
-    
+        
+        
     #Create directory to execute the job
     output_dir = os.path.join(WORKING_DIR_PATH, token)
     if (output_dir[-1]=="/"): output_dir = output_dir[:-1]
@@ -72,43 +80,38 @@ def submit_job(token):
     except FileExistsError:
         return job_already_submitted_exception(token)
 
+    setting_up = f"cd {output_dir};\n"
 
     #Save files inside it
-    ssRNA_fasta.save(output_dir + "/" + secure_filename(ssRNA_fasta.filename))
-    if (dsDNA_fasta is not None):
-        dsDNA_fasta.save(output_dir + "/" + secure_filename(dsDNA_fasta.filename))
-        dna_fn = dsDNA_fasta.filename.removesuffix(f".{dsDNA_fasta.filename.split('.')[-1]}")
-        link_dna = ""
-    elif (dsDNA_predefined is not None):
-        dna_fn = "dsDNA"
-        link_dna = f"ln -s {dsDNA_file_path} {output_dir}/{dna_fn}.fa; \n"
+    
+    if (ssRNA_fasta.filename.split('.')[-1]=="gz"):
+        ssRNA_fasta.save(f"{output_dir}/{ssRNA_filename}.fa.gz")
+        setting_up = setting_up + f"gzip -d {ssRNA_filename}.fa.gz;\n "
+    else:
+        ssRNA_fasta.save(f"{output_dir}/{ssRNA_filename}.fa")
 
+    if (dsDNA_fasta is not None):
+        dsDNA_fasta.save(f"{output_dir}/{dsDNA_filename}.fa")
+        
     #Now need to build the string containing the command to execute in shell:
     #Setting up: prepare environment to execute the snakemake rules
-    setting_up = f"""{CONDA_SETUP} \n cd {output_dir} \n conda activate {CONDA_ENV_PATH}
-        export PATH={BIN_PATH}:$PATH:{BIOINFOTREE_ROOT} \n cd {output_dir};\n"""
-
-    #If ssRNA_fasta compressed need to add line to unzip it
-    if (ssRNA_fasta.filename.split('.')[-1]=="gz"):
-        rna_fn = ssRNA_fasta.filename.removesuffix(f".{ssRNA_fasta.filename.split('.')[-2]}.gz")
-        setting_up = setting_up + f"gzip -d {ssRNA_fasta.filename}; "
-    else:
-        rna_fn = ssRNA_fasta.filename.removesuffix(f".{ssRNA_fasta.filename.split('.')[-1]}")
+    setting_up = setting_up + f"""{CONDA_SETUP} \n  conda activate {CONDA_ENV_PATH}
+        export PATH={BIN_PATH}:$PATH:{BIOINFOTREE_ROOT};\n"""
     
     #Need to link files inside the working directory
-    link_files = f"""{link_dna}
+    link_files = f"""
 ln -s {SNAKEFILE_PATH} {output_dir};
 ln -s {CONFIG_PATH} {output_dir}/config_general.yaml;
-ln -s {CONFIG_SK} {output_dir}/config.sk;
+ln -s {CONFIG_SK} {output_dir}/config.smk;
 echo \"{config_formatted}\" > {output_dir}/config.yaml;
 """
 
     #Prepare the snakemake command
     rule=f"""
 snakemake -p {SLURM_CONFIG} \
-    {rna_fn}_ssmasked-{dna_fn}.tpx.summary.add_zeros.gz \
-    {rna_fn}_ssmasked-{dna_fn}.tpx.stability.gz \
-    {rna_fn}_secondary_structure.msgpack {rna_fn}profile_range.msgpack\
+    {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.summary.add_zeros.gz \
+    {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.stability.gz \
+    {ssRNA_filename}_secondary_structure.msgpack {ssRNA_filename}profile_range.msgpack\
     >> {output_dir}/STDOUT 2>>{output_dir}/STDERR
 """
 
@@ -124,7 +127,7 @@ snakemake -p {SLURM_CONFIG} \
         pid = os.fork()
         if (pid <= 0):
             print(f"Child process with pid {pid} starts 3plex")
-            call_on_close(token, command, output_dir, rna_fn, dna_fn)
+            call_on_close(token, command, output_dir, ssRNA_filename, dsDNA_filename)
         else:
             print(f"Parent (worker) process with pid {pid} has finished its job")
         exit()
