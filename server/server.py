@@ -17,11 +17,15 @@ def config_params_missing(token):
     return f"Cannot receive job - 3plex params missing or incomplete", 400
 
 def validate_input_params(input_string):
+    if (input_string is None):
+        return True
     pattern = r'^[a-zA-Z0-9-_.]+$'
     return re.match(pattern, input_string) is not None
 
 def parse_config(triplex_params, other_params):
     parameter_dict = {}
+    print(triplex_params)
+    print(other_params)
     parameter_dict['min_length'] = triplex_params['min_len']
     parameter_dict['max_length'] = triplex_params['max_len']
     parameter_dict['error_rate'] = triplex_params['error_rate']
@@ -32,45 +36,38 @@ def parse_config(triplex_params, other_params):
     for key in parameter_dict.keys():
         if (not validate_input_params(parameter_dict[key])):
             raise Exception()
+    for key in other_params.keys():
+        if (not validate_input_params(other_params[key])):
+            raise Exception()
     stringified = '\n'.join([key+': ' + other_params[key] for key in other_params.keys()]) + "\ntriplexator:\n" + '\n'.join(['        ' + key+': ' + parameter_dict[key] for key in parameter_dict.keys()])
     return stringified
 
 #Main API -> receive new job
 @app.post("/submit/<token>")
 def submit_job(token):
+    additional_params = dict()
     #Read input files
     dsDNA_predefined = request.args.get('dsdna_target')
+    if (dsDNA_predefined):
+        additional_params["dsDNA_predefined"] = dsDNA_predefined
+    else:
+        dsDNA_fasta = request.files['dsDNA_fasta']
     ssRNA_fasta = request.files['ssRNA_fasta']
     species = request.args.get('species')
+    if (species):
+        additional_params["species"] = species
 
     dsDNA_filename = "dsDNA" #TODO spostare in server_config.py
     ssRNA_filename = "ssRNA" #TODO spostare in server_config.py
 
     
-
-    ##########################################
-    #
-    #  Inpt data validation
-    #
-
-    if ("/" in dsDNA_predefined):
-            return "Illegal character in dsDNA", 400
-
-    ##########################################
-
     try:
         #Parse config generates string to be saved in the config.yaml file
         #First argument contains the form with 3plex parameters, second is a dict of any additional param
         #that does not belong to "triplexator:"
-        config_formatted = parse_config(request.form, {"species": species, "dsDNA_predefined": dsDNA_predefined})
-    except Exception:
+        config_formatted = parse_config(request.form, additional_params)
+    except Exception as e:
         return config_params_missing(token)
-    
-    if (dsDNA_predefined is None):
-        dsDNA_fasta = request.files['dsDNA_fasta']
-    else:
-        dsDNA_fasta = None
-        
         
     #Create directory to execute the job
     output_dir = os.path.join(WORKING_DIR_PATH, token)
