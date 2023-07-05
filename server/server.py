@@ -63,7 +63,7 @@ def submit_job(token):
     #!! I removed the rename of ssRNA_fasta: if it is a user-uploaded file, the renaming happens
     #on frontend server, together with the fasta header change. If it is a transcript, the original name
     #is kept to keep it consistent with the fasta header
-    ssRNA_filename = secure_filename(ssRNA_fasta.filename)
+    ssRNA_filename = "ssRNA"# secure_filename(ssRNA_fasta.filename)
 
     
     try:
@@ -84,15 +84,10 @@ def submit_job(token):
 
     setting_up = f"cd {output_dir};\n"
 
-    #Save files inside it
-    if (ssRNA_filename.split('.')[-1]=="gz"):
-        ssRNA_fasta.save(f"{output_dir}/{ssRNA_filename}")
-        setting_up = setting_up + f"gzip -d {ssRNA_filename};\n "
-        ssRNA_filename = ssRNA_filename.removesuffix(".gz")
-        ssRNA_filename = ssRNA_filename.removesuffix(".fa")
-    else:
-        ssRNA_fasta.save(f"{output_dir}/{ssRNA_filename}")
-        ssRNA_filename = ssRNA_filename.removesuffix(".fa")
+    #Unzip ssRNA if zipped!
+    if (secure_filename(ssRNA_fasta.filename).split('.')[-1]=="gz"):
+        ssRNA_fasta.save(f"{output_dir}/{ssRNA_filename}.fa.gz")
+        setting_up = setting_up + f"gzip -d {ssRNA_filename}.fa.gz;\n "
 
     if (dsDNA_fasta is not None):
         dsDNA_fasta.save(f"{output_dir}/{dsDNA_filename}.fa")
@@ -110,9 +105,9 @@ ln -s {CONFIG_SK} {output_dir}/config.smk;
 echo \"{config_formatted}\" > {output_dir}/config.yaml;
 """
     #Link targetDsDNA if needed
-    if (dsDNA_predefined is not None):
+    """if (dsDNA_predefined is not None):
         target_dsDNA_path = os.path.join(TARGET_DSDNA_PATH , dsDNA_predefined)
-        link_files = link_files + f"\n ln -s {target_dsDNA_path}.fa {output_dir}/{dsDNA_filename}.fa; \n"
+        link_files = link_files + f"\n ln -s {target_dsDNA_path}.fa {output_dir}/{dsDNA_filename}.fa; \n" """
 
     #Prepare the snakemake command
     rule=f"""
