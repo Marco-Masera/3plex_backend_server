@@ -1,0 +1,7 @@
+min_len: 8
+max_len: -1
+error_rate: 20
+guanine_rate: 40
+filter_repeat: off
+consecutive_errors: 1
+SSTRAND: 0

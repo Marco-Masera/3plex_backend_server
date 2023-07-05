@@ -1,0 +1,26 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job                       count    min threads    max threads
+----------------------  -------  -------------  -------------
+ssRNA_fasta_dsDNA_MANE        1              1              1
+total                         1              1              1
+
+Select jobs to execute...
+
+[Wed Jul  5 17:29:59 2023]
+rule ssRNA_fasta_dsDNA_MANE:
+    input: test_data/ssRNA.fa
+    jobid: 0
+    reason: Rules with a run or shell declaration but no output are always executed.
+    resources: tmpdir=/mnt/nvme_raid0/tmp
+
+
+		python run_test.py --token ssRNA_fasta_dsDNA_MANE --ssRNA_fasta_path test_data/ssRNA.fa         --dsdna_target MANE.GRCh38.v1.1.refseq_genomic.Symbol.tss.1500_500 		--species "hsapiens" --param_config test_data/3plex_default_params.yaml
+	
+[Wed Jul  5 17:30:00 2023]
+Finished job 0.
+1 of 1 steps (100%) done
+Complete log: .snakemake/log/2023-07-05T172959.792444.snakemake.log

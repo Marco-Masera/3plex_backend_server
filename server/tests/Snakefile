@@ -1,0 +1,27 @@
+
+rule ssRNA_fasta_dsDNA_fasta:
+	input:
+		ssRNA="test_data/ssRNA.fa",
+		dsDNA="test_data/dsDNA.fa"
+	shell: """
+		python run_test.py --token {rule} --ssRNA_fasta_path {input.ssRNA} --dsDNA_fasta_or_bed_path {input.dsDNA} \
+		--param_config test_data/3plex_default_params.yaml
+	"""
+
+	rule ssRNA_id_dsDNA_fasta:
+	input:
+		ssRNA="test_data/ssRNA.fa",
+		dsDNA="test_data/ENST00000000233.fa.gz"
+	shell: """
+		python run_test.py --token {rule} --ssRNA_fasta_path {input.ssRNA} --dsDNA_fasta_or_bed_path {input.dsDNA} \
+		--param_config test_data/3plex_default_params.yaml
+	"""
+
+rule ssRNA_fasta_dsDNA_MANE:
+	input:
+		ssRNA="test_data/ssRNA.fa"
+	shell: """
+		python run_test.py --token {rule} --ssRNA_fasta_path {input.ssRNA} \
+        --dsdna_target MANE.GRCh38.v1.1.refseq_genomic.Symbol.tss.1500_500 \
+		--species "hsapiens" --param_config test_data/3plex_default_params.yaml
+	"""

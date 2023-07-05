@@ -2,11 +2,20 @@ from flask import Flask, request,render_template,Response
 from werkzeug.utils import secure_filename
 import os
 import re
+import sys
 from server_config import *
+import pytest
 from execute_rules_and_ping import call_on_close
 
 app = Flask(__name__)
 
+class BadParameterException(Exception):
+    pass
+
+
+@pytest.fixture()
+def client(app):
+    return app.test_client()
 
 @app.errorhandler(409 )
 def job_already_submitted_exception(token):
@@ -15,6 +24,10 @@ def job_already_submitted_exception(token):
 @app.errorhandler(400)
 def config_params_missing(token):
     return f"Cannot receive job - 3plex params missing or incomplete", 400
+
+@app.errorhandler(400)
+def internal_server_error(token):
+    return f"Internal server error", 500
 
 def validate_input_params(input_string):
     if (input_string is None):
@@ -35,10 +48,10 @@ def parse_config(triplex_params, other_params):
     parameter_dict['SSTRAND'] = triplex_params['SSTRAND']
     for key in parameter_dict.keys():
         if (not validate_input_params(parameter_dict[key])):
-            raise Exception()
+            raise BadParameterException()
     for key in other_params.keys():
         if (not validate_input_params(other_params[key])):
-            raise Exception()
+            raise BadParameterException()
     stringified = '\n'.join([key+': ' + other_params[key] for key in other_params.keys()]) + "\ntriplexator:\n" + '\n'.join(['        ' + key+': ' + parameter_dict[key] for key in parameter_dict.keys()])
     return stringified
 
@@ -57,18 +70,13 @@ def prepare_job(token, request):
         additional_params["species"] = species
 
     dsDNA_filename = "dsDNA"
-    #!! I removed the rename of ssRNA_fasta: if it is a user-uploaded file, the renaming happens
-    #on frontend server, together with the fasta header change. If it is a transcript, the original name
-    #is kept to keep it consistent with the fasta header
-    ssRNA_filename = "ssRNA"# secure_filename(ssRNA_fasta.filename)
-
-    
+    ssRNA_filename = "ssRNA"
 
     #Parse config generates string to be saved in the config.yaml file
     #First argument contains the form with 3plex parameters, second is a dict of any additional param
     #that does not belong to "triplexator:"
     config_formatted = parse_config(request.form, additional_params)
-        
+
     #Create directory to execute the job
     output_dir = os.path.join(WORKING_DIR_PATH, token)
     if (output_dir[-1]=="/"): output_dir = output_dir[:-1]
@@ -80,6 +88,8 @@ def prepare_job(token, request):
     if (secure_filename(ssRNA_fasta.filename).split('.')[-1]=="gz"):
         ssRNA_fasta.save(f"{output_dir}/{ssRNA_filename}.fa.gz")
         setting_up = setting_up + f"gzip -d {ssRNA_filename}.fa.gz;\n "
+    else:
+        ssRNA_fasta.save(f"{output_dir}/{ssRNA_filename}.fa")
 
     if (dsDNA_fasta is not None):
         dsDNA_fasta.save(f"{output_dir}/{dsDNA_filename}.fa")
@@ -123,9 +133,9 @@ def submit_job(token):
         jobData = prepare_job(token, request)
     except FileExistsError:
         return job_already_submitted_exception(token)
-    except Exception as e:
+    except BadParameterException as e:
         return config_params_missing(token)
-    
+
 
     #If no exceptions so far, can return a response
     response = Response( f"Job with token {token} received" )
@@ -136,19 +146,21 @@ def submit_job(token):
         pid = os.fork()
         if (pid <= 0):
             print(f"Child process with pid {pid} starts 3plex")
-            call_on_close(jobData["token"], jobData["command"],jobData["output_dir"],jobData["ssRNA_filename"],jobData["dsDNA_filename"])
+            call_on_close(token, jobData["command"],jobData["output_dir"],jobData["ssRNA_filename"],jobData["dsDNA_filename"])
         else:
             print(f"Parent (worker) process with pid {pid} has finished its job")
         exit()
     return response
 
 
-def run_test(token, fakeRequest):
+def run_test(token, request):
     try:
-        jobData = prepare_job(token, fakeRequest)
+        jobData = prepare_job(token, request)
     except FileExistsError:
-        return job_already_submitted_exception(token)
-    except Exception as e:
-        return config_params_missing(token)
+        sys.stderr.write("Test already executed\n")
+        return False
+    except BadParameterException as e:
+        sys.stderr.write("Bad params\n")
+        return False
 
-    call_on_close(response["token"], response["command"],response["output_dir"],response["ssRNA_filename"],response["dsDNA_filename"], True)
+    return call_on_close(token, jobData["command"],jobData["output_dir"],jobData["ssRNA_filename"],jobData["dsDNA_filename"], True)

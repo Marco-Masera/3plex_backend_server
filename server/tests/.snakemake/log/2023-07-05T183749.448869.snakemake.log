@@ -1,0 +1,2 @@
+SyntaxError in file /home/mmasera/3plex_backend_server/server/tests/Snakefile, line 15:
+No rule keywords allowed after run/shell/script/notebook/wrapper/template_engine/cwl in rule ssRNA_fasta_dsDNA_fasta. (Snakefile, line 15)
