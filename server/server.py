@@ -50,6 +50,8 @@ def submit_job(token):
     dsDNA_predefined = request.args.get('dsdna_target')
     if (dsDNA_predefined):
         additional_params["dsDNA_predefined"] = dsDNA_predefined
+        print(dsDNA_predefined)
+        dsDNA_fasta = None
     else:
         dsDNA_fasta = request.files['dsDNA_fasta']
     ssRNA_fasta = request.files['ssRNA_fasta']
