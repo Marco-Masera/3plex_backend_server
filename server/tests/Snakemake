@@ -1,0 +1,11 @@
+
+
+
+rule run_test:
+	input:
+		ssRNA="{ssRNA}.fa"
+        dsDNA="{dsDNA}.fa"
+	shell: """
+		python run_test.py --token token --ssRNA_fasta_path {ssRNA} --dsDNA_fasta_or_bed_path {dsDNA}  \
+        --dsdna_target "-" --species "s"
+	"""

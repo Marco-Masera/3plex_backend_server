@@ -42,15 +42,12 @@ def parse_config(triplex_params, other_params):
     stringified = '\n'.join([key+': ' + other_params[key] for key in other_params.keys()]) + "\ntriplexator:\n" + '\n'.join(['        ' + key+': ' + parameter_dict[key] for key in parameter_dict.keys()])
     return stringified
 
-#Main API -> receive new job
-@app.post("/submit/<token>")
-def submit_job(token):
+def prepare_job(token, request):
     additional_params = dict()
     #Read input files
     dsDNA_predefined = request.args.get('dsdna_target')
     if (dsDNA_predefined):
         additional_params["dsDNA_predefined"] = dsDNA_predefined
-        print(dsDNA_predefined)
         dsDNA_fasta = None
     else:
         dsDNA_fasta = request.files['dsDNA_fasta']
@@ -66,21 +63,16 @@ def submit_job(token):
     ssRNA_filename = "ssRNA"# secure_filename(ssRNA_fasta.filename)
 
     
-    try:
-        #Parse config generates string to be saved in the config.yaml file
-        #First argument contains the form with 3plex parameters, second is a dict of any additional param
-        #that does not belong to "triplexator:"
-        config_formatted = parse_config(request.form, additional_params)
-    except Exception as e:
-        return config_params_missing(token)
+
+    #Parse config generates string to be saved in the config.yaml file
+    #First argument contains the form with 3plex parameters, second is a dict of any additional param
+    #that does not belong to "triplexator:"
+    config_formatted = parse_config(request.form, additional_params)
         
     #Create directory to execute the job
     output_dir = os.path.join(WORKING_DIR_PATH, token)
     if (output_dir[-1]=="/"): output_dir = output_dir[:-1]
-    try:
-        os.mkdir(output_dir)
-    except FileExistsError:
-        return job_already_submitted_exception(token)
+    os.mkdir(output_dir)
 
     setting_up = f"cd {output_dir};\n"
 
@@ -121,20 +113,42 @@ snakemake -p {SLURM_CONFIG} \
     #Assemble the complete command
     command = f"{setting_up} {link_files} \n {rule} "
 
+    return {"command": command, token: "token", "output_dir": output_dir, 
+        "ssRNA_filename": ssRNA_filename, "dsDNA_filename": dsDNA_filename}
+    
+#Main API -> receive new job
+@app.post("/submit/<token>")
+def submit_job(token):
+    try:
+        jobData = prepare_job(token, request)
+    except FileExistsError:
+        return job_already_submitted_exception(token)
+    except Exception as e:
+        return config_params_missing(token)
+    
+
     #If no exceptions so far, can return a response
     response = Response( f"Job with token {token} received" )
-    
+
     #After returning response, execute command
     @response.call_on_close
     def on_close():
         pid = os.fork()
         if (pid <= 0):
             print(f"Child process with pid {pid} starts 3plex")
-            call_on_close(token, command, output_dir, ssRNA_filename, dsDNA_filename)
+            call_on_close(jobData["token"], jobData["command"],jobData["output_dir"],jobData["ssRNA_filename"],jobData["dsDNA_filename"])
         else:
             print(f"Parent (worker) process with pid {pid} has finished its job")
         exit()
     return response
-    
 
 
+def run_test(token, fakeRequest):
+    try:
+        jobData = prepare_job(token, fakeRequest)
+    except FileExistsError:
+        return job_already_submitted_exception(token)
+    except Exception as e:
+        return config_params_missing(token)
+
+    call_on_close(response["token"], response["command"],response["output_dir"],response["ssRNA_filename"],response["dsDNA_filename"], True)

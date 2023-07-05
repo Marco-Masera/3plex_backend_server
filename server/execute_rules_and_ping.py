@@ -61,9 +61,11 @@ def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken):
     if (DELETE_JOB_DIRECTORY_AFTER_SUCCESS):
         r = execute_command(f"rm -rf {output_dir}", token)
 
-def call_on_close(token, command, output_dir, rna_fn, dna_fn):
+def call_on_close(token, command, output_dir, rna_fn, dna_fn, DEBUG=False):
     hashed_token = get_hashed(token)
     return_code = execute_command(command, token)
+    if (DEBUG==True):
+        return (return_code==0)
     if (return_code==0):
         ping_job_succeeded(token, output_dir, rna_fn, dna_fn, hashed_token)
     else:
