@@ -109,13 +109,17 @@ ln -s {CONFIG_PATH} {output_dir}/config_general.yaml;
 ln -s {CONFIG_SK} {output_dir}/config.smk;
 echo \"{config_formatted}\" > {output_dir}/config.yaml;
 """
+    #Link targetDsDNA if needed
+    if (dsDNA_predefined is not None):
+        target_dsDNA_path = os.path.join(TARGET_DSDNA_PATH , dsDNA_predefined)
+        link_files = link_files + f"\n ln -s {target_dsDNA_path}.fa {output_dir}/{dsDNA_filename}.fa; \n"
 
     #Prepare the snakemake command
     rule=f"""
 snakemake -p {SLURM_CONFIG} \
     {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.summary.add_zeros.gz \
     {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.stability.gz \
-    {ssRNA_filename}_secondary_structure.msgpack {ssRNA_filename}profile_range.msgpack\
+    {ssRNA_filename}_secondary_structure.msgpack {ssRNA_filename}.profile_range.msgpack\
     >> {output_dir}/STDOUT 2>>{output_dir}/STDERR
 """
 
