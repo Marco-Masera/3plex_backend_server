@@ -59,8 +59,11 @@ def submit_job(token):
     if (species):
         additional_params["species"] = species
 
-    dsDNA_filename = "dsDNA" #TODO spostare in server_config.py
-    ssRNA_filename = "ssRNA" #TODO spostare in server_config.py
+    dsDNA_filename = "dsDNA"
+    #!! I removed the rename of ssRNA_fasta: if it is a user-uploaded file, the renaming happens
+    #on frontend server, together with the fasta header change. If it is a transcript, the original name
+    #is kept to keep it consistent with the fasta header
+    ssRNA_filename = secure_filename(ssRNA_fasta.filename)
 
     
     try:
@@ -82,12 +85,14 @@ def submit_job(token):
     setting_up = f"cd {output_dir};\n"
 
     #Save files inside it
-    
-    if (ssRNA_fasta.filename.split('.')[-1]=="gz"):
-        ssRNA_fasta.save(f"{output_dir}/{ssRNA_filename}.fa.gz")
-        setting_up = setting_up + f"gzip -d {ssRNA_filename}.fa.gz;\n "
+    if (ssRNA_filename.split('.')[-1]=="gz"):
+        ssRNA_fasta.save(f"{output_dir}/{ssRNA_filename}")
+        setting_up = setting_up + f"gzip -d {ssRNA_filename};\n "
+        ssRNA_filename = ssRNA_filename.removesuffix(".gz")
+        ssRNA_filename = ssRNA_filename.removesuffix(".fa")
     else:
-        ssRNA_fasta.save(f"{output_dir}/{ssRNA_filename}.fa")
+        ssRNA_fasta.save(f"{output_dir}/{ssRNA_filename}")
+        ssRNA_filename = ssRNA_filename.removesuffix(".fa")
 
     if (dsDNA_fasta is not None):
         dsDNA_fasta.save(f"{output_dir}/{dsDNA_filename}.fa")
