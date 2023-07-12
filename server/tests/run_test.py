@@ -18,7 +18,7 @@ class DotDict():
             return self.dict[attr]
         return None
     def get(self, attr):
-        return self.attr
+        return self.dict.get(attr, None)
 
 def format_yaml(path):
     with open (path, "r") as config:
@@ -32,7 +32,6 @@ def get_fileStorage_from_path(path):
 
 def main():
     parser = argparse.ArgumentParser(description="Integration test for server.py and 3plex")
-    # Add the named arguments
     parser.add_argument('--token', help='Token')
     parser.add_argument('--ssRNA_fasta_path', help='Description of argument 1')
     parser.add_argument('--dsDNA_fasta_or_bed_path', help='Description of argument 2')
@@ -41,12 +40,14 @@ def main():
     parser.add_argument('--param_config', help='')
     
     args = parser.parse_args()
+
     #Generate fake flask request
     request = {
         "files": dict(),
         "args": dict(),
         "form": format_yaml(args.param_config)
     }
+    #Populate fake request from parser.args
     for key in request["form"].keys():
         request["form"][key] = str(request["form"][key])
     if (args.ssRNA_fasta_path and len(args.ssRNA_fasta_path)>0):
@@ -59,15 +60,27 @@ def main():
         request["args"]["dsdna_target"] = args.dsdna_target
     if (args.species and len(args.species)>0):
         request["args"]["species"] = args.species
+
     #Rebuild into dotDict
-    #request["form"] = DotDict.from_dict(request["form"])
     request["args"] = DotDict.from_dict(request["args"])
     request =  DotDict.from_dict(request)
+
+    #Remove test dir if exists
+    if (os.path.isdir(os.path.join(WORKING_DIR_PATH, args.token))):
+        shutil.rmtree(os.path.join(WORKING_DIR_PATH, args.token))
+
+    #Run test
     result = run_test(args.token, request)
     
     if (result):
         shutil.rmtree(os.path.join(WORKING_DIR_PATH, args.token))
-
+    else:
+        stderr_path = os.path.join(WORKING_DIR_PATH, args.token, "STDERR")
+        with open(stderr_path, "r") as log:
+            print(f"\n\n    ---------   Failed test {args.token}    ---------\n\nLogs:")
+            print(log.read())
+            print("\n\n")
+        
     assert result
 
 

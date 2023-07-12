@@ -64,10 +64,13 @@ def prepare_job(token, request):
         dsDNA_fasta = None
     else:
         dsDNA_fasta = request.files['dsDNA_fasta']
+        additional_params["dsDNA_predefined"] = "null"
     ssRNA_fasta = request.files['ssRNA_fasta']
     species = request.args.get('species')
     if (species):
         additional_params["species"] = species
+    else:
+        additional_params["species"] = "null"
 
     dsDNA_filename = "dsDNA"
     ssRNA_filename = "ssRNA"

@@ -18,7 +18,7 @@ BIN_PATH = os.path.join(CURRENT_PATH, "3plex", "local", "bin")
 BIOINFOTREE_ROOT = "/home/reference_data/bioinfotree/local/bin/"
 CONDA_ENV_PATH = "/home/mmasera/3plex_backend_server/server/3plex/local/envs/3plex"
 #Other params
-SERVER_URL = "http://192.168.186.10:8001"
+SERVER_URL = "http://192.168.99.164:80/debug"
 #HMAC Secret key. Warning_ keep the key used in production safe
 HMAC_KEY = "YOU_WISH_YOU_KNEW_MY_SECRET_KEY!"
 

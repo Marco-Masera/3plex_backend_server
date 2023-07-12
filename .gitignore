@@ -3,3 +3,4 @@ server/working_dir/*
 server/.snakemake
 *.pyc
 **/__pycache__/
+server/tests/.snakemake
