@@ -15,10 +15,11 @@ CONFIG_PATH = os.path.join(CURRENT_PATH, "3plex", "local", "config", "config_v1_
 CONFIG_SK = os.path.join(CURRENT_PATH, "3plex", "local", "config", "config.smk")
 WORKING_DIR_PATH = os.path.join(CURRENT_PATH, "3plex", "dataset", "jobs")
 BIN_PATH = os.path.join(CURRENT_PATH, "3plex", "local", "bin")
-BIOINFOTREE_ROOT = "/home/reference_data/bioinfotree/local/bin/"
-CONDA_ENV_PATH = "/home/mmasera/3plex_backend_server/server/3plex/local/envs/3plex"
+#BIOINFOTREE_ROOT = "/home/reference_data/bioinfotree/local/bin/"
+#CONDA_ENV_PATH = "/home/mmasera/3plex_backend_server/server/3plex/local/envs/3plex"
+CONDA_ENV_PATH = "/home/marco/3plex/3plex_backend_server/server/3plex/local/envs/3plex_test"
 #Other params
-SERVER_URL = "http://192.168.99.164:80/debug"
+SERVER_URL = "http://localhost:8001/debug"
 #HMAC Secret key. Warning_ keep the key used in production safe
 HMAC_KEY = "YOU_WISH_YOU_KNEW_MY_SECRET_KEY!"
 

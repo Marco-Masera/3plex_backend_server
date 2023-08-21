@@ -83,7 +83,7 @@ def prepare_job(token, request):
     #Create directory to execute the job
     output_dir = os.path.join(WORKING_DIR_PATH, token)
     if (output_dir[-1]=="/"): output_dir = output_dir[:-1]
-    os.mkdir(output_dir)
+    os.makedirs(output_dir)
 
     setting_up = f"cd {output_dir};\n"
 
@@ -99,8 +99,9 @@ def prepare_job(token, request):
         
     #Now need to build the string containing the command to execute in shell:
     #Setting up: prepare environment to execute the snakemake rules
-    setting_up = setting_up + f"""{CONDA_SETUP} \n  conda activate {CONDA_ENV_PATH}
-        export PATH={BIN_PATH}:$PATH:{BIOINFOTREE_ROOT};\n"""
+    #setting_up = setting_up + f"""{CONDA_SETUP} \n  conda activate {CONDA_ENV_PATH}
+    #    export PATH={BIN_PATH}:$PATH:{BIOINFOTREE_ROOT};\n"""
+    setting_up = setting_up + f"""{CONDA_SETUP} \n  conda activate {CONDA_ENV_PATH}\n"""
     
     #Need to link files inside the working directory
     link_files = f"""
@@ -115,8 +116,15 @@ echo \"{config_formatted}\" > {output_dir}/config.yaml;
         link_files = link_files + f"\n ln -s {target_dsDNA_path}.fa {output_dir}/{dsDNA_filename}.fa; \n" """
 
     #Prepare the snakemake command
-    rule=f"""
+    rule_old=f"""
 snakemake -p {SLURM_CONFIG} \
+    {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.summary.add_zeros.gz \
+    {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.stability.gz \
+    {ssRNA_filename}_secondary_structure.msgpack {ssRNA_filename}.profile_range.msgpack\
+    >> {output_dir}/STDOUT 2>>{output_dir}/STDERR
+"""
+    rule=f"""
+snakemake -c1 \
     {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.summary.add_zeros.gz \
     {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.stability.gz \
     {ssRNA_filename}_secondary_structure.msgpack {ssRNA_filename}.profile_range.msgpack\
