@@ -24,14 +24,14 @@ SERVER_URL = "http://localhost:8001/debug"
 HMAC_KEY = "YOU_WISH_YOU_KNEW_MY_SECRET_KEY!"
 
 #CONDA_SETUP is needed to run conda commands inside shell scripts executed from py
-CONDA_SETUP = """__conda_setup="$('/opt/conda/miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+CONDA_SETUP = """__conda_setup="$('/home/marco/mambaforge/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
 if [ $? -eq 0 ]; then
     eval "$__conda_setup"
 else
-    if [ -f "/opt/conda/miniconda3/etc/profile.d/conda.sh" ]; then
-        . "/opt/conda/miniconda3/etc/profile.d/conda.sh"
+    if [ -f "/home/marco/mambaforge/etc/profile.d/conda.sh" ]; then
+        . "/home/marco/mambaforge/etc/profile.d/conda.sh"
     else
-        export PATH="/opt/conda/miniconda3/bin:$PATH"
+        export PATH="/home/marco/mambaforge/bin/:$PATH"
     fi
 fi"""
 
