@@ -28,7 +28,7 @@ else
     if [ -f \"""" + CONDA_BASE + """/etc/profile.d/conda.sh" ]; then
         . \"""" + CONDA_BASE + """/etc/profile.d/conda.sh"
     else
-        export PATH=\"""" + /home/marco/mambaforge + """/bin/:$PATH"
+        export PATH=\"""" + CONDA_BASE + """/bin/:$PATH"
     fi
 fi"""
 
