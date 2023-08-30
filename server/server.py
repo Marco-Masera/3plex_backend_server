@@ -99,10 +99,8 @@ def prepare_job(token, request):
         
     #Now need to build the string containing the command to execute in shell:
     #Setting up: prepare environment to execute the snakemake rules
-    #setting_up = setting_up + f"""{CONDA_SETUP} \n  conda activate {CONDA_ENV_PATH}
-    #    export PATH={BIN_PATH}:$PATH:{BIOINFOTREE_ROOT};\n"""
-    setting_up = setting_up + f"""{CONDA_SETUP} \n  conda activate {CONDA_ENV_PATH}\n"""
-    
+    setting_up = setting_up + f"""{CONDA_SETUP} \n  conda activate {CONDA_ENV_PATH}
+        export PATH={BIN_PATH}:$PATH;\n"""
     #Need to link files inside the working directory
     link_files = f"""
 ln -s {SNAKEFILE_PATH} {output_dir};
