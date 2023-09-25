@@ -1,2 +1,2 @@
-LOCAL_SERVER_URL = "http://localhost:8001/debug"
-CONDA_BASE = "/home/marco/mambaforge"
+FRONTEND_SERVER_URL = "http://192.168.99.164:80/debug"
+CONDA_BASE = "/opt/conda/miniconda3/bin/conda"

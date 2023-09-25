@@ -16,7 +16,7 @@ WORKING_DIR_PATH = os.path.join(CURRENT_PATH, "3plex", "dataset", "jobs")
 BIN_PATH = os.path.join(CURRENT_PATH, "3plex", "local", "bin")
 CONDA_ENV_PATH = os.path.join(CURRENT_PATH, "3plex", "local", "envs", "3plex_test") 
 #Other params
-SERVER_URL = LOCAL_SERVER_URL
+SERVER_URL = FRONTEND_SERVER_URL
 #HMAC Secret key. Warning_ keep the key used in production safe
 HMAC_KEY = "YOU_WISH_YOU_KNEW_MY_SECRET_KEY!"
 
