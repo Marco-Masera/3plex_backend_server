@@ -35,9 +35,10 @@ def main():
     parser.add_argument('--token', help='Token')
     parser.add_argument('--ssRNA_fasta_path', help='Description of argument 1')
     parser.add_argument('--dsDNA_fasta_or_bed_path', help='Description of argument 2')
-    parser.add_argument('--dsdna_target', help='Description of argument 3')
-    parser.add_argument('--species', help='Description of argument 4')
+    parser.add_argument('--dsdna_target', help='Target dsDNA - can be None')
+    parser.add_argument('--species', help='Field species. Can be none, hsapiens or mmusculus')
     parser.add_argument('--param_config', help='')
+    parser.add_argument('--randomization', help='Use randomization')
     
     args = parser.parse_args()
 
@@ -60,6 +61,11 @@ def main():
         request["args"]["dsdna_target"] = args.dsdna_target
     if (args.species and len(args.species)>0):
         request["args"]["species"] = args.species
+
+    if (args.randomization):
+        request["args"]["use_random"] = True
+    else:
+        request["args"]["use_random"] = False
 
     #Rebuild into dotDict
     request["args"] = DotDict.from_dict(request["args"])

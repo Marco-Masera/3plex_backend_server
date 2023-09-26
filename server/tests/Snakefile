@@ -37,3 +37,13 @@ rule ssRNA_fasta_dsDNA_MANE:
         --dsdna_target MANE.GRCh38.v1.1.refseq_genomic.Symbol.tss.1500_500 \
 		--species "hsapiens" --param_config test_data/3plex_default_params.yaml
 	"""
+
+rule ssRNA_fasta_dsDNA_MANE_with_random:
+	input:
+		ssRNA="test_data/ssRNA.fa"
+	shell: """
+		python run_test.py --token {rule} --ssRNA_fasta_path {input.ssRNA} \
+        --dsdna_target MANE.GRCh38.v1.1.refseq_genomic.Symbol.tss.1500_500 \
+		--species "hsapiens" --param_config test_data/3plex_default_params.yaml
+		--randomization 1
+	"""
