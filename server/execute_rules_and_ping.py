@@ -45,9 +45,23 @@ def ping_job_failed(token, output_dir, htoken):
         sleep(300)
     #r = execute_command(f"rm -rf {output_dir}", token)
 
-def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken):
+def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken, use_random=False):
     tries = 0
-    send_response = f"curl {SERVER_URL}/results/submitresult/{token}/ -F SUMMARY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.summary.gz -F STABILITY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.gz -F PROFILE=@{output_dir}/{ssRNA}.profile_range.msgpack -F SECONDARY_STRUCTURE=@{output_dir}/{ssRNA}_secondary_structure.msgpack -F HTOKEN={htoken}"
+    files_to_send = [
+        {"name": "SUMMARY", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.summary.gz"},
+        {"name": "STABILITY", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.gz"},
+        {"name": "PROFILE", "path": f"{output_dir}/{ssRNA}.profile_range.msgpack"},
+        {"name": "SECONDARY_STRUCTURE", "path": f"{output_dir}/{ssRNA}_secondary_structure.msgpack"}
+    ]
+    if (use_random):
+        files_to_send.append(
+            {"name": "PROFILE_RANDOM", "path": f"{output_dir}/{ssRNA}.profile_range.random.msgpack"}
+        )
+    send_files_command = " ".join(
+        [f"-F {f["name"]}=@{f["path"]}" for f in files_to_send]
+    )
+    #-F SUMMARY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.summary.gz -F STABILITY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.gz -F PROFILE=@{output_dir}/{ssRNA}.profile_range.msgpack -F SECONDARY_STRUCTURE=@{output_dir}/{ssRNA}_secondary_structure.msgpack
+    send_response = f"curl {SERVER_URL}/results/submitresult/{token}/ {send_files_command} -F HTOKEN={htoken}"
     while True:
         r = execute_command(send_response, token)
         if (r == 0):
@@ -61,12 +75,12 @@ def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken):
     if (DELETE_JOB_DIRECTORY_AFTER_SUCCESS):
         r = execute_command(f"rm -rf {output_dir}", token)
 
-def call_on_close(token, command, output_dir, rna_fn, dna_fn, DEBUG=False):
+def call_on_close(token, command, output_dir, rna_fn, dna_fn, use_random=False, DEBUG=False):
     hashed_token = get_hashed(token)
     return_code = execute_command(command, token)
     if (DEBUG==True):
         return (return_code==0)
     if (return_code==0):
-        ping_job_succeeded(token, output_dir, rna_fn, dna_fn, hashed_token)
+        ping_job_succeeded(token, output_dir, rna_fn, dna_fn, hashed_token, use_random)
     else:
         ping_job_failed(token, output_dir, hashed_token)
