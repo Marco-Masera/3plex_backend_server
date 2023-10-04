@@ -2,7 +2,7 @@ import os
 from  server_config_local import *
 
 cores=32
-jobs=10
+jobs=20
 
 DELETE_JOB_DIRECTORY_AFTER_SUCCESS = False
 
@@ -17,6 +17,7 @@ BIN_PATH = os.path.join(CURRENT_PATH, "3plex", "local", "bin")
 CONDA_ENV_PATH = os.path.join(CURRENT_PATH, "3plex", "local", "envs", "3plex") 
 #Other params
 SERVER_URL = FRONTEND_SERVER_URL
+SERVER_URL_DEBUG = FRONTEND_SERVER_URL_DEBUG
 #HMAC Secret key. Warning_ keep the key used in production safe
 HMAC_KEY = "YOU_WISH_YOU_KNEW_MY_SECRET_KEY!"
 

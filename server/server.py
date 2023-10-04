@@ -58,6 +58,7 @@ def parse_config(triplex_params, other_params):
 def prepare_job(token, request):
     additional_params = dict()
     #Read input files
+    
     use_randomization = request.args.get('use_random')
     dsDNA_predefined = request.args.get('dsdna_target')
     if (dsDNA_predefined):
@@ -72,6 +73,7 @@ def prepare_job(token, request):
         additional_params["species"] = species
     else:
         additional_params["species"] = "null"
+    DEBUG = request.args.get('debug')
 
     dsDNA_filename = "dsDNA"
     ssRNA_filename = "ssRNA"
@@ -111,17 +113,17 @@ echo \"{config_formatted}\" > {output_dir}/config.yaml;
 """
     #Prepare the snakemake command
     if (use_randomization):
-        random_rule = f"{ssRNA_filename}.profile_range.random.msgpack\n\"
+        random_rule = f"{ssRNA_filename}.profile_range.random.msgpack"
     else:
         random_rule = ""
-    rule_old=f"""
+    rule=f"""
 snakemake -p {SLURM_CONFIG} \
     {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.summary.add_zeros.gz \
     {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.stability.gz \
     {ssRNA_filename}_secondary_structure.msgpack {ssRNA_filename}.profile_range.msgpack\
     {random_rule} >> {output_dir}/STDOUT 2>>{output_dir}/STDERR
 """
-    rule=f"""
+    rule_no_srun=f"""
 snakemake -c1 \
     {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.summary.add_zeros.gz \
     {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.stability.gz \
@@ -133,7 +135,8 @@ snakemake -c1 \
     command = f"{setting_up} {link_files} \n {rule} "
 
     return {"command": command, token: "token", "output_dir": output_dir, 
-        "ssRNA_filename": ssRNA_filename, "dsDNA_filename": dsDNA_filename}
+        "ssRNA_filename": ssRNA_filename, "dsDNA_filename": dsDNA_filename, "random": use_randomization,
+        "DEBUG": DEBUG}
     
 #Main API -> receive new job
 @app.post("/submit/<token>")
@@ -145,6 +148,8 @@ def submit_job(token):
     except BadParameterException as e:
         return config_params_missing(token)
 
+    """print(f"DEBUG: {jobData['DEBUG']}")
+    return None"""
 
     #If no exceptions so far, can return a response
     response = Response( f"Job with token {token} received" )
@@ -155,14 +160,14 @@ def submit_job(token):
         pid = os.fork()
         if (pid <= 0):
             print(f"Child process with pid {pid} starts 3plex")
-            call_on_close(token, jobData["command"],jobData["output_dir"],jobData["ssRNA_filename"],jobData["dsDNA_filename"], use_randomization)
+            call_on_close(token, jobData["command"],jobData["output_dir"],jobData["ssRNA_filename"],jobData["dsDNA_filename"], jobData["random"], DEBUG=jobData["DEBUG"])
         else:
             print(f"Parent (worker) process with pid {pid} has finished its job")
         exit()
     return response
 
 
-def run_test(token, request, use_randomization):
+def run_test(token, request):
     try:
         jobData = prepare_job(token, request)
     except FileExistsError:
@@ -172,4 +177,4 @@ def run_test(token, request, use_randomization):
         sys.stderr.write("Bad params\n")
         return False
 
-    return call_on_close(token, jobData["command"],jobData["output_dir"],jobData["ssRNA_filename"],jobData["dsDNA_filename"], DEBUG=True)
+    return call_on_close(token, jobData["command"],jobData["output_dir"],jobData["ssRNA_filename"],jobData["dsDNA_filename"], TEST=True)

@@ -6,6 +6,9 @@ import shutil
 import os
 from server_config import *
 
+
+SERVER_URL_G = ""
+
 def get_hashed(token):
     h = hmac.new(bytes(HMAC_KEY, 'utf-8'), msg=bytes(token, 'utf-8'), digestmod='sha256')
     digested = h.hexdigest()
@@ -17,12 +20,12 @@ def execute_command(cmd, path):
     try:
         cwd = tempfile.mkdtemp(path)
         with subprocess.Popen(['/bin/bash', '-c', cmd], cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, bufsize=1) as p:
-            print("Stdout:")
+            """print("Stdout:")
             for line in p.stdout:
                 print(line)
             print("Stderr:")
             for line in p.stderr:
-                print(line)
+                print(line)"""
             return_code = p.wait()
     finally:
         try:
@@ -58,7 +61,7 @@ def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken, use_random=False
             {"name": "PROFILE_RANDOM", "path": f"{output_dir}/{ssRNA}.profile_range.random.msgpack"}
         )
     send_files_command = " ".join(
-        [f"-F {f["name"]}=@{f["path"]}" for f in files_to_send]
+        [f"-F {f['name']}=@{f['path']}" for f in files_to_send]
     )
     #-F SUMMARY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.summary.gz -F STABILITY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.gz -F PROFILE=@{output_dir}/{ssRNA}.profile_range.msgpack -F SECONDARY_STRUCTURE=@{output_dir}/{ssRNA}_secondary_structure.msgpack
     send_response = f"curl {SERVER_URL}/results/submitresult/{token}/ {send_files_command} -F HTOKEN={htoken}"
@@ -75,10 +78,16 @@ def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken, use_random=False
     if (DELETE_JOB_DIRECTORY_AFTER_SUCCESS):
         r = execute_command(f"rm -rf {output_dir}", token)
 
-def call_on_close(token, command, output_dir, rna_fn, dna_fn, use_random=False, DEBUG=False):
+def call_on_close(token, command, output_dir, rna_fn, dna_fn, use_random=False, DEBUG=False, TEST=False):
+    global SERVER_URL_G
+    if (DEBUG):
+        SERVER_URL_G = SERVER_URL_DEBUG
+    else:
+        SERVER_URL_G = SERVER_URL
+        
     hashed_token = get_hashed(token)
     return_code = execute_command(command, token)
-    if (DEBUG==True):
+    if (TEST==True):
         return (return_code==0)
     if (return_code==0):
         ping_job_succeeded(token, output_dir, rna_fn, dna_fn, hashed_token, use_random)
