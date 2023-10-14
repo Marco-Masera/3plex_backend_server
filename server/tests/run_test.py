@@ -63,9 +63,9 @@ def main():
         request["args"]["species"] = args.species
 
     if (args.randomization):
-        request["args"]["use_random"] = True
+        request["args"]["use_random"] = 20
     else:
-        request["args"]["use_random"] = False
+        request["args"]["use_random"] = 0
 
     #Rebuild into dotDict
     request["args"] = DotDict.from_dict(request["args"])

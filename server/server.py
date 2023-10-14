@@ -37,8 +37,6 @@ def validate_input_params(input_string):
 
 def parse_config(triplex_params, other_params):
     parameter_dict = {}
-    print(triplex_params)
-    print(other_params)
     parameter_dict['min_length'] = triplex_params['min_len']
     parameter_dict['max_length'] = triplex_params['max_len']
     parameter_dict['error_rate'] = triplex_params['error_rate']
@@ -60,6 +58,11 @@ def prepare_job(token, request):
     #Read input files
     
     use_randomization = request.args.get('use_random')
+    if (use_randomization is None):
+        use_randomization = 0
+    else:
+        additional_params["randomization_num"] = use_randomization
+        use_randomization = int(use_randomization)
     dsDNA_predefined = request.args.get('dsdna_target')
     if (dsDNA_predefined):
         additional_params["dsDNA_predefined"] = dsDNA_predefined
@@ -112,7 +115,7 @@ ln -s {CONFIG_SK} {output_dir}/config.smk;
 echo \"{config_formatted}\" > {output_dir}/config.yaml;
 """
     #Prepare the snakemake command
-    if (use_randomization):
+    if (use_randomization>0):
         random_rule = f"{ssRNA_filename}.profile_range.random.msgpack"
     else:
         random_rule = ""
@@ -135,7 +138,7 @@ snakemake -c1 \
     command = f"{setting_up} {link_files} \n {rule} "
 
     return {"command": command, token: "token", "output_dir": output_dir, 
-        "ssRNA_filename": ssRNA_filename, "dsDNA_filename": dsDNA_filename, "random": use_randomization,
+        "ssRNA_filename": ssRNA_filename, "dsDNA_filename": dsDNA_filename, "random": use_randomization>0,
         "DEBUG": DEBUG}
     
 #Main API -> receive new job
@@ -160,7 +163,7 @@ def submit_job(token):
         pid = os.fork()
         if (pid <= 0):
             print(f"Child process with pid {pid} starts 3plex")
-            call_on_close(token, jobData["command"],jobData["output_dir"],jobData["ssRNA_filename"],jobData["dsDNA_filename"], jobData["random"], DEBUG=jobData["DEBUG"])
+            call_on_close(token, jobData["command"],jobData["output_dir"],jobData["ssRNA_filename"],jobData["dsDNA_filename"], jobData["random"], DEBUG=jobData['DEBUG'])
         else:
             print(f"Parent (worker) process with pid {pid} has finished its job")
         exit()

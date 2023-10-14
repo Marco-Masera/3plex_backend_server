@@ -36,7 +36,7 @@ def execute_command(cmd, path):
 
          
 def ping_job_failed(token, output_dir, htoken):
-    send_response = f"curl {SERVER_URL}/results/submiterror/{token}/ -F STDOUT=@{output_dir}/STDOUT -F STDERR=@{output_dir}/STDERR -F HTOKEN={htoken}"
+    send_response = f"curl {SERVER_URL_G}/results/submiterror/{token}/ -F STDOUT=@{output_dir}/STDOUT -F STDERR=@{output_dir}/STDERR -F HTOKEN={htoken}"
     tries = 0
     while True:
         r = execute_command(f"{send_response}", token)
@@ -64,7 +64,7 @@ def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken, use_random=False
         [f"-F {f['name']}=@{f['path']}" for f in files_to_send]
     )
     #-F SUMMARY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.summary.gz -F STABILITY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.gz -F PROFILE=@{output_dir}/{ssRNA}.profile_range.msgpack -F SECONDARY_STRUCTURE=@{output_dir}/{ssRNA}_secondary_structure.msgpack
-    send_response = f"curl {SERVER_URL}/results/submitresult/{token}/ {send_files_command} -F HTOKEN={htoken}"
+    send_response = f"curl {SERVER_URL_G}/results/submitresult/{token}/ {send_files_command} -F HTOKEN={htoken}"
     while True:
         r = execute_command(send_response, token)
         if (r == 0):
@@ -80,7 +80,7 @@ def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken, use_random=False
 
 def call_on_close(token, command, output_dir, rna_fn, dna_fn, use_random=False, DEBUG=False, TEST=False):
     global SERVER_URL_G
-    if (DEBUG):
+    if (DEBUG==True):
         SERVER_URL_G = SERVER_URL_DEBUG
     else:
         SERVER_URL_G = SERVER_URL
