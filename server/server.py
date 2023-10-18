@@ -122,6 +122,7 @@ echo \"{config_formatted}\" > {output_dir}/config.yaml;
     rule=f"""
 snakemake -p {SLURM_CONFIG} \
     {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.summary.add_zeros.gz \
+    {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.stability.indexed.gz.tbi \
     {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.stability.gz \
     {ssRNA_filename}_secondary_structure.msgpack {ssRNA_filename}.profile_range.msgpack\
     {random_rule} >> {output_dir}/STDOUT 2>>{output_dir}/STDERR
