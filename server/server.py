@@ -43,7 +43,7 @@ def parse_config(triplex_params, other_params):
     parameter_dict['guanine_rate'] = triplex_params['guanine_rate']
     parameter_dict['filter_repeat'] = triplex_params['filter_repeat']
     parameter_dict['consecutive_errors'] = triplex_params['consecutive_errors']
-    parameter_dict['SSTRAND'] = triplex_params['SSTRAND']
+    #parameter_dict['SSTRAND'] = triplex_params['SSTRAND']
     for key in parameter_dict.keys():
         if (not validate_input_params(parameter_dict[key])):
             raise BadParameterException()
@@ -51,6 +51,10 @@ def parse_config(triplex_params, other_params):
         if (not validate_input_params(other_params[key])):
             raise BadParameterException()
     stringified = '\n'.join([key+': ' + other_params[key] for key in other_params.keys()]) + "\ntriplexator:\n" + '\n'.join(['        ' + key+': ' + parameter_dict[key] for key in parameter_dict.keys()])
+    if (triplex_params['SSTRAND']):
+        if (not validate_input_params(triplex_params['SSTRAND'])):
+            raise BadParameterException() 
+        stringified += f"\nRNAplfold:\n        single_strandedness_cutoff: {triplex_params['SSTRAND']}"
     return stringified
 
 def prepare_job(token, request):
