@@ -54,7 +54,9 @@ def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken, use_random=False
         {"name": "SUMMARY", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.summary.add_zeros.gz"},
         {"name": "STABILITY", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.gz"},
         {"name": "PROFILE", "path": f"{output_dir}/{ssRNA}.profile_range.msgpack"},
-        {"name": "SECONDARY_STRUCTURE", "path": f"{output_dir}/{ssRNA}_secondary_structure.msgpack"}
+        {"name": "SECONDARY_STRUCTURE", "path": f"{output_dir}/{ssRNA}_secondary_structure.msgpack"},
+        {"name": "STABILITY_INDEXED", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.indexed.gz"},
+        {"name": "STABILITY_INDEXES", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.indexed.gz.tbi"}
     ]
     if (use_random):
         files_to_send.append(
