@@ -50,7 +50,7 @@ def parse_config(triplex_params, other_params):
     for key in other_params.keys():
         if (not validate_input_params(other_params[key])):
             raise BadParameterException()
-    stringified = '\n'.join([key+': ' + other_params[key] for key in other_params.keys()]) + "\ntriplexator:\n" + '\n'.join(['        ' + key+': ' + parameter_dict[key] for key in parameter_dict.keys()])
+    stringified = '\n'.join([key+': ' + other_params[key] for key in other_params.keys()]) + "\npato:\n" + '\n'.join(['        ' + key+': ' + parameter_dict[key] for key in parameter_dict.keys()])
     if (triplex_params['SSTRAND']):
         if (not validate_input_params(triplex_params['SSTRAND'])):
             raise BadParameterException() 

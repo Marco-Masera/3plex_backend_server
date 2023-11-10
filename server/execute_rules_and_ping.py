@@ -51,7 +51,7 @@ def ping_job_failed(token, output_dir, htoken):
 def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken, use_random=False):
     tries = 0
     files_to_send = [
-        {"name": "SUMMARY", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.summary.gz"},
+        {"name": "SUMMARY", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.summary.add_zeros.gz"},
         {"name": "STABILITY", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.gz"},
         {"name": "PROFILE", "path": f"{output_dir}/{ssRNA}.profile_range.msgpack"},
         {"name": "SECONDARY_STRUCTURE", "path": f"{output_dir}/{ssRNA}_secondary_structure.msgpack"}

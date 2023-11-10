@@ -19,6 +19,8 @@ class DotDict():
         return None
     def get(self, attr):
         return self.dict.get(attr, None)
+    def __str__(self):
+        return str(self.dict)
 
 def format_yaml(path):
     with open (path, "r") as config:
@@ -63,9 +65,9 @@ def main():
         request["args"]["species"] = args.species
 
     if (args.randomization):
-        request["args"]["use_random"] = 20
+        request["args"]["use_random"] = "20"
     else:
-        request["args"]["use_random"] = 0
+        request["args"]["use_random"] = "0"
 
     #Rebuild into dotDict
     request["args"] = DotDict.from_dict(request["args"])
