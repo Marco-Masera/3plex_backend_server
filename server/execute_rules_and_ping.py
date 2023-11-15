@@ -7,8 +7,6 @@ import os
 from server_config import *
 
 
-SERVER_URL_G = ""
-
 def get_hashed(token):
     h = hmac.new(bytes(HMAC_KEY, 'utf-8'), msg=bytes(token, 'utf-8'), digestmod='sha256')
     digested = h.hexdigest()
@@ -35,7 +33,7 @@ def execute_command(cmd, path):
     return return_code
 
          
-def ping_job_failed(token, output_dir, htoken):
+def ping_job_failed(token, output_dir, htoken, SERVER_URL_G):
     send_response = f"curl {SERVER_URL_G}/results/submiterror/{token}/ -F STDOUT=@{output_dir}/STDOUT -F STDERR=@{output_dir}/STDERR -F HTOKEN={htoken}"
     tries = 0
     while True:
@@ -48,7 +46,8 @@ def ping_job_failed(token, output_dir, htoken):
         sleep(300)
     #r = execute_command(f"rm -rf {output_dir}", token)
 
-def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken, use_random=False):
+def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken, use_random=False, SERVER_URL_G=""):
+    print(f"Server url: {SERVER_URL_G}")
     tries = 0
     files_to_send = [
         {"name": "SUMMARY", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.summary.add_zeros.gz"},
@@ -81,17 +80,16 @@ def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken, use_random=False
         r = execute_command(f"rm -rf {output_dir}", token)
 
 def call_on_close(token, command, output_dir, rna_fn, dna_fn, use_random=False, DEBUG=False, TEST=False):
-    global SERVER_URL_G
-    if (DEBUG==True):
+    if (DEBUG):
         SERVER_URL_G = SERVER_URL_DEBUG
     else:
         SERVER_URL_G = SERVER_URL
-        
     hashed_token = get_hashed(token)
     return_code = execute_command(command, token)
     if (TEST==True):
         return (return_code==0)
     if (return_code==0):
-        ping_job_succeeded(token, output_dir, rna_fn, dna_fn, hashed_token, use_random)
+        print(f"Debug: {DEBUG}")
+        ping_job_succeeded(token, output_dir, rna_fn, dna_fn, hashed_token, use_random, SERVER_URL_G)
     else:
-        ping_job_failed(token, output_dir, hashed_token)
+        ping_job_failed(token, output_dir, hashed_token, SERVER_URL_G)

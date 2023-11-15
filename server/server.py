@@ -74,6 +74,7 @@ def prepare_job(token, request):
     else:
         dsDNA_fasta = request.files['dsDNA_fasta']
         additional_params["dsDNA_predefined"] = "null"
+    dsDNA_is_bed = request.args.get('is_bed')
     ssRNA_fasta = request.files['ssRNA_fasta']
     species = request.args.get('species')
     if (species):
@@ -105,12 +106,23 @@ def prepare_job(token, request):
         ssRNA_fasta.save(f"{output_dir}/{ssRNA_filename}.fa")
 
     if (dsDNA_fasta is not None):
-        dsDNA_fasta.save(f"{output_dir}/{dsDNA_filename}.fa")
+        if (dsDNA_is_bed):
+            dsDNA_fasta.save(f"{output_dir}/{dsDNA_filename}.bed")
+        else:
+            dsDNA_fasta.save(f"{output_dir}/{dsDNA_filename}.fa")
+    
+    #Can index tpx only if there is a bed dsDNA
+    can_index_tpx = dsDNA_is_bed or dsDNA_predefined is not None
+    if (can_index_tpx):
+        index_rule = f"{ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.stability.indexed.gz.tbi"
+    else:
+        index_rule = ""
         
     #Now need to build the string containing the command to execute in shell:
     #Setting up: prepare environment to execute the snakemake rules
     setting_up = setting_up + f"""{CONDA_SETUP} \n  conda activate {CONDA_ENV_PATH}
-        export PATH={BIN_PATH}:$PATH;\n"""
+        export PATH={BIN_PATH}:$PATH;\n
+        export PRJ_ROOT={os.path.join(CURRENT_PATH, "3plex")};\n"""
     #Need to link files inside the working directory
     link_files = f"""
 ln -s {SNAKEFILE_PATH} {output_dir};
@@ -126,8 +138,7 @@ echo \"{config_formatted}\" > {output_dir}/config.yaml;
     rule=f"""
 snakemake -p {SLURM_CONFIG} \
     {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.summary.add_zeros.gz \
-    {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.stability.indexed.gz.tbi \
-    {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.stability.gz \
+    {index_rule} {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.stability.gz \
     {ssRNA_filename}_secondary_structure.msgpack {ssRNA_filename}.profile_range.msgpack\
     {random_rule} >> {output_dir}/STDOUT 2>>{output_dir}/STDERR
 """
@@ -156,8 +167,6 @@ def submit_job(token):
     except BadParameterException as e:
         return config_params_missing(token)
 
-    """print(f"DEBUG: {jobData['DEBUG']}")
-    return None"""
 
     #If no exceptions so far, can return a response
     response = Response( f"Job with token {token} received" )
