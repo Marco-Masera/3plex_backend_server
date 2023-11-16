@@ -46,17 +46,22 @@ def ping_job_failed(token, output_dir, htoken, SERVER_URL_G):
         sleep(300)
     #r = execute_command(f"rm -rf {output_dir}", token)
 
-def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken, use_random=False, SERVER_URL_G=""):
+def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken, use_random=False, SERVER_URL_G="", can_index_tpx=False):
     print(f"Server url: {SERVER_URL_G}")
     tries = 0
     files_to_send = [
         {"name": "SUMMARY", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.summary.add_zeros.gz"},
         {"name": "STABILITY", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.gz"},
         {"name": "PROFILE", "path": f"{output_dir}/{ssRNA}.profile_range.msgpack"},
-        {"name": "SECONDARY_STRUCTURE", "path": f"{output_dir}/{ssRNA}_secondary_structure.msgpack"},
-        {"name": "STABILITY_INDEXED", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.indexed.gz"},
-        {"name": "STABILITY_INDEXES", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.indexed.gz.tbi"}
+        {"name": "SECONDARY_STRUCTURE", "path": f"{output_dir}/{ssRNA}_secondary_structure.msgpack"}
     ]
+    if (can_index_tpx):
+        files_to_send.append(
+            {"name": "STABILITY_INDEXED", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.indexed.gz"}
+        )
+        files_to_send.append(
+            {"name": "STABILITY_INDEXES", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.indexed.gz.tbi"}
+        )
     if (use_random):
         files_to_send.append(
             {"name": "PROFILE_RANDOM", "path": f"{output_dir}/{ssRNA}.profile_range.random.msgpack"}
@@ -79,7 +84,7 @@ def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken, use_random=False
     if (DELETE_JOB_DIRECTORY_AFTER_SUCCESS):
         r = execute_command(f"rm -rf {output_dir}", token)
 
-def call_on_close(token, command, output_dir, rna_fn, dna_fn, use_random=False, DEBUG=False, TEST=False):
+def call_on_close(token, command, output_dir, rna_fn, dna_fn, use_random=False, DEBUG=False, TEST=False, can_index_tpx=False):
     if (DEBUG):
         SERVER_URL_G = SERVER_URL_DEBUG
     else:
@@ -90,6 +95,6 @@ def call_on_close(token, command, output_dir, rna_fn, dna_fn, use_random=False, 
         return (return_code==0)
     if (return_code==0):
         print(f"Debug: {DEBUG}")
-        ping_job_succeeded(token, output_dir, rna_fn, dna_fn, hashed_token, use_random, SERVER_URL_G)
+        ping_job_succeeded(token, output_dir, rna_fn, dna_fn, hashed_token, use_random, SERVER_URL_G, can_index_tpx)
     else:
         ping_job_failed(token, output_dir, hashed_token, SERVER_URL_G)
