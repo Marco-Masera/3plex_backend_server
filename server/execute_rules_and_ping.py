@@ -56,12 +56,13 @@ def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken, use_random=False
         {"name": "SECONDARY_STRUCTURE", "path": f"{output_dir}/{ssRNA}_secondary_structure.msgpack"}
     ]
     if (can_index_tpx):
-        files_to_send.append(
-            {"name": "STABILITY_INDEXED", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.indexed.gz"}
-        )
-        files_to_send.append(
-            {"name": "STABILITY_INDEXES", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.indexed.gz.tbi"}
-        )
+        files_to_send = files_to_send + [
+            {"name": "STABILITY_INDEXED", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.indexed.db"},
+            #{"name": "STABILITY_INDEXES", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.indexed.rna.gz.tbi"},
+            #{"name": "STABILITY_INDEXED_DNA", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.indexed.dna.gz"},
+            #{"name": "STABILITY_INDEXES_DNA", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.indexed.dna.gz.tbi"},
+            #{"name": "STABILITY_TABULAR", "path": f"{output_dir}/{ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.stability.tabular.msgpack"},
+        ]
     if (use_random):
         files_to_send.append(
             {"name": "PROFILE_RANDOM", "path": f"{output_dir}/{ssRNA}.profile_range.random.msgpack"}

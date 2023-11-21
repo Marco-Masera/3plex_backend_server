@@ -59,14 +59,15 @@ def parse_config(triplex_params, other_params):
 
 def prepare_job(token, request):
     additional_params = dict()
-    #Read input files
-    
+
+    #Read request files and parameters.........................................
     use_randomization = request.args.get('use_random')
     if (use_randomization is None):
         use_randomization = 0
     else:
         additional_params["randomization_num"] = use_randomization
         use_randomization = int(use_randomization)
+
     dsDNA_predefined = request.args.get('dsdna_target')
     if (dsDNA_predefined):
         additional_params["dsDNA_predefined"] = dsDNA_predefined
@@ -74,15 +75,16 @@ def prepare_job(token, request):
     else:
         dsDNA_fasta = request.files['dsDNA_fasta']
         additional_params["dsDNA_predefined"] = "null"
+
     dsDNA_is_bed = request.args.get('is_bed')=="True"
     ssRNA_fasta = request.files['ssRNA_fasta']
     species = request.args.get('species')
+
     if (species):
         additional_params["species"] = species
     else:
         additional_params["species"] = "null"
     DEBUG = request.args.get('debug')
-
     dsDNA_filename = "dsDNA"
     ssRNA_filename = "ssRNA"
 
@@ -91,7 +93,7 @@ def prepare_job(token, request):
     #that does not belong to "triplexator:"
     config_formatted = parse_config(request.form, additional_params)
 
-    #Create directory to execute the job
+    #Create directory to execute the job..................................
     output_dir = os.path.join(WORKING_DIR_PATH, token)
     if (output_dir[-1]=="/"): output_dir = output_dir[:-1]
     os.makedirs(output_dir)
@@ -111,12 +113,6 @@ def prepare_job(token, request):
         else:
             dsDNA_fasta.save(f"{output_dir}/{dsDNA_filename}.fa")
     
-    #Can index tpx only if there is a bed dsDNA
-    can_index_tpx = dsDNA_is_bed or dsDNA_predefined is not None
-    if (can_index_tpx):
-        index_rule = f"{ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.stability.indexed.gz.tbi"
-    else:
-        index_rule = ""
         
     #Now need to build the string containing the command to execute in shell:
     #Setting up: prepare environment to execute the snakemake rules
@@ -130,11 +126,21 @@ ln -s {CONFIG_PATH} {output_dir}/config_general.yaml;
 ln -s {CONFIG_SK} {output_dir}/config.smk;
 echo \"{config_formatted}\" > {output_dir}/config.yaml;
 """
+    #-------------------------------------------------------
     #Prepare the snakemake command
+    #Add rule for randomization
     if (use_randomization>0):
         random_rule = f"{ssRNA_filename}.profile_range.random.msgpack"
     else:
         random_rule = ""
+    #Add rule for indexes only if bed is provided
+    can_index_tpx = dsDNA_is_bed or dsDNA_predefined is not None
+    #can_index_tpx = False #DEBUG!
+    if (can_index_tpx):
+        index_rule = f"""{ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.stability.indexed.db """
+    else:
+        index_rule = ""
+    #Build rule   
     rule=f"""
 snakemake -p {SLURM_CONFIG} \
     {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.summary.add_zeros.gz \
@@ -150,7 +156,7 @@ snakemake -c1 \
     {random_rule} >> {output_dir}/STDOUT 2>>{output_dir}/STDERR
 """
 
-    #Assemble the complete command
+    #Assemble the complete command...............................................
     command = f"{setting_up} {link_files} \n {rule} "
 
     return {"command": command, token: "token", "output_dir": output_dir, 
