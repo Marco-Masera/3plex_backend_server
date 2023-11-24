@@ -133,18 +133,11 @@ echo \"{config_formatted}\" > {output_dir}/config.yaml;
         random_rule = f"{ssRNA_filename}.profile_range.random.msgpack"
     else:
         random_rule = ""
-    #Add rule for indexes only if bed is provided
-    can_index_tpx = dsDNA_is_bed or dsDNA_predefined is not None
-    #can_index_tpx = False #DEBUG!
-    if (can_index_tpx):
-        index_rule = f"""{ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.stability.indexed.db """
-    else:
-        index_rule = ""
     #Build rule   
     rule=f"""
 snakemake -p {SLURM_CONFIG} \
     {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.summary.add_zeros.gz \
-    {index_rule} {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.stability.gz \
+    {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.stability.gz \
     {ssRNA_filename}_secondary_structure.msgpack {ssRNA_filename}.profile_range.msgpack\
     {random_rule} >> {output_dir}/STDOUT 2>>{output_dir}/STDERR
 """
@@ -161,7 +154,7 @@ snakemake -c1 \
 
     return {"command": command, token: "token", "output_dir": output_dir, 
         "ssRNA_filename": ssRNA_filename, "dsDNA_filename": dsDNA_filename, "random": use_randomization>0,
-        "DEBUG": DEBUG, "can_index_tpx": can_index_tpx}
+        "DEBUG": DEBUG}
     
 #Main API -> receive new job
 @app.post("/submit/<token>")
@@ -183,7 +176,7 @@ def submit_job(token):
         pid = os.fork()
         if (pid <= 0):
             print(f"Child process with pid {pid} starts 3plex")
-            call_on_close(token, jobData["command"],jobData["output_dir"],jobData["ssRNA_filename"],jobData["dsDNA_filename"], jobData["random"], DEBUG=jobData['DEBUG'], can_index_tpx=jobData["can_index_tpx"])
+            call_on_close(token, jobData["command"],jobData["output_dir"],jobData["ssRNA_filename"],jobData["dsDNA_filename"], jobData["random"], DEBUG=jobData['DEBUG'])
         else:
             print(f"Parent (worker) process with pid {pid} has finished its job")
         exit()
