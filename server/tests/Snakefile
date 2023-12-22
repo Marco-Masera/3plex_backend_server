@@ -7,7 +7,7 @@ rule all:
 		snakemake -c1 -p ssRNA_id_dsDNA_fasta;
 		snakemake -c1 -p ssRNA_fasta_dsDNA_MANE;
 	"""
-
+#For normal 3plex usage:---------------------------------------
 #Test with both ssRNA and dsDNA as fasta files - no species or dsDNA_predefined specified
 rule ssRNA_fasta_dsDNA_fasta:
 	input:
@@ -55,4 +55,32 @@ rule ssRNA_fasta_dsDNA_fasta_random:
 	shell: """
 		python run_test.py --token {rule} --ssRNA_fasta_path {input.ssRNA} --dsDNA_fasta_or_bed_path {input.dsDNA} \
 		--param_config test_data/3plex_default_params.yaml  --randomization 1
+	"""
+
+#Test with ssRNA as transcript (compressed!) 
+rule ssRNA_id:
+	input:
+		ssRNA="test_data/ENST00000000233.fa.gz",
+		dsDNA="test_data/dsDNA_small.fa"
+	shell: """
+		python run_test.py --token {rule} --ssRNA_fasta_path {input.ssRNA} \
+		--param_config test_data/3plex_default_params.yaml --species hsapiens
+	"""
+
+#For promoter_stability test usage:---------------------------------------
+#Test with both ssRNA as fasta file
+rule promoter_ssRNA_fasta:
+	input:
+		ssRNA="test_data/ssRNA.fa",
+	shell: """
+		python run_test_promoter_stability.py --token {rule} --ssRNA_fasta_path {input.ssRNA} \
+		--param_config test_data/3plex_default_params.yaml --species hsapiens
+	"""
+#romoter with transcript
+rule promoter_ssRNA_id:
+	input:
+		ssRNA="test_data/ENST00000000233.fa.gz",
+	shell: """
+		python run_test_promoter_stability.py --token {rule} --ssRNA_fasta_path {input.ssRNA} \
+		--param_config test_data/3plex_default_params.yaml --species hsapiens
 	"""

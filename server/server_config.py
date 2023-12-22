@@ -5,7 +5,7 @@ cores=32
 jobs=20
 
 DELETE_JOB_DIRECTORY_AFTER_SUCCESS = False
-
+DEBUG_SKIP_SERVER_AUTHENTICATION = False
 #BASE VARIABLES
 CURRENT_PATH = os.path.dirname(os.path.realpath(__file__))
 TARGET_DSDNA_PATH = os.path.join(CURRENT_PATH, "local", "data", "target_dsdna")
@@ -16,8 +16,12 @@ WORKING_DIR_PATH = os.path.join(CURRENT_PATH, "3plex", "dataset", "jobs")
 BIN_PATH = os.path.join(CURRENT_PATH, "3plex", "local", "bin")
 CONDA_ENV_PATH = os.path.join(CURRENT_PATH, "3plex", "local", "envs", "3plex") 
 #Other params
-SERVER_URL = FRONTEND_SERVER_URL
-SERVER_URL_DEBUG = FRONTEND_SERVER_URL_DEBUG
+def get_server_url(is_debug):
+    print(f"Debug is {is_debug} - debug server: {FRONTEND_SERVER_URL_DEBUG} - standard: {FRONTEND_SERVER_URL}")
+    if (is_debug==True):
+        return FRONTEND_SERVER_URL_DEBUG
+    else:
+        return FRONTEND_SERVER_URL
 #HMAC Secret key. Warning_ keep the key used in production safe
 HMAC_KEY = "YOU_WISH_YOU_KNEW_MY_SECRET_KEY!"
 
@@ -35,3 +39,7 @@ fi"""
 
 
 SLURM_CONFIG=f"--slurm --default-resources slurm_partition=low mem_mb=8000 --cores {cores} --jobs {jobs}"
+
+transcript_fastas = transcript_fastas_local
+tss_ref_bed = tss_ref_bed_local
+genome_fasta = genome_fasta_local
