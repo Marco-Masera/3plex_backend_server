@@ -32,8 +32,8 @@ def execute_command(cmd, path):
             pass
     return return_code
  
-def ping_job_failed(token, output_dir, htoken, SERVER_URL_G):
-    send_response = f"curl {SERVER_URL_G}/results/submiterror/{token}/ -F STDOUT=@{output_dir}/STDOUT -F STDERR=@{output_dir}/STDERR -F HTOKEN={htoken}"
+def ping_job_failed(token, output_dir, htoken, SERVER_URL_G, api_name="submiterror"):
+    send_response = f"curl {SERVER_URL_G}/results/{api_name}/{token}/ -F STDOUT=@{output_dir}/STDOUT -F STDERR=@{output_dir}/STDERR -F HTOKEN={htoken}"
     tries = 0
     while True:
         r = execute_command(f"{send_response}", token)
@@ -45,13 +45,12 @@ def ping_job_failed(token, output_dir, htoken, SERVER_URL_G):
         sleep(300)
     #r = execute_command(f"rm -rf {output_dir}", token)
 
-def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken, use_random=False, SERVER_URL_G="", files_to_send={}):
+def ping_job_succeeded(token, output_dir, htoken, use_random=False, SERVER_URL_G="", files_to_send={}, api_name="submitresult"):
     tries = 0
     send_files_command = " ".join(
         [f"-F {f['name']}=@{f['path']}" for f in files_to_send]
     )
-    #-F SUMMARY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.summary.gz -F STABILITY=@{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.stability.gz -F PROFILE=@{output_dir}/{ssRNA}.profile_range.msgpack -F SECONDARY_STRUCTURE=@{output_dir}/{ssRNA}_secondary_structure.msgpack
-    send_response = f"curl {SERVER_URL_G}/results/submitresult/{token}/ {send_files_command} -F HTOKEN={htoken}"
+    send_response = f"curl {SERVER_URL_G}/results/{api_name}/{token}/ {send_files_command} -F HTOKEN={htoken}"
     while True:
         r = execute_command(send_response, token)
         if (r == 0):
@@ -65,16 +64,13 @@ def ping_job_succeeded(token, output_dir, ssRNA, dsDNA, htoken, use_random=False
     if (DELETE_JOB_DIRECTORY_AFTER_SUCCESS):
         r = execute_command(f"rm -rf {output_dir}", token)
 
-def call_on_close(token, command, output_dir, rna_fn, dna_fn, use_random=False, DEBUG=False, TEST=False, files_to_send={}):
+def call_on_close(token, command, output_dir, use_random=False, DEBUG=False, TEST=False, files_to_send={}, api_names = ["submitresult", "submiterror"]):
     use_server = get_server_url(DEBUG)
-    print("Call on close ................")
-    print(f"Debug: {DEBUG}")
-    print(f"Server url: {use_server}")
     hashed_token = get_hashed(token)
     return_code = execute_command(command, token)
     if (TEST==True):
         return (return_code==0)
     if (return_code==0):
-        ping_job_succeeded(token, output_dir, rna_fn, dna_fn, hashed_token, use_random=use_random, SERVER_URL_G=use_server, files_to_send=files_to_send)
+        ping_job_succeeded(token, output_dir, hashed_token, use_random=use_random, SERVER_URL_G=use_server, files_to_send=files_to_send, api_name=api_names[0])
     else:
-        ping_job_failed(token, output_dir, hashed_token, use_server)
+        ping_job_failed(token, output_dir, hashed_token, use_server,  api_name=api_names[1])

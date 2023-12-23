@@ -205,7 +205,7 @@ def submit_job(token):
         pid = os.fork()
         if (pid <= 0):
             print(f"Child process with pid {pid} starts 3plex")
-            call_on_close(token, jobData["command"],jobData["output_dir"],jobData["ssRNA_filename"],jobData["dsDNA_filename"], jobData["random"], DEBUG=jobData['DEBUG'], files_to_send=files_to_send)
+            call_on_close(token, jobData["command"],jobData["output_dir"], jobData["random"], DEBUG=jobData['DEBUG'], files_to_send=files_to_send)
         else:
             print(f"Parent (worker) process with pid {pid} has finished its job")
         exit()
@@ -216,9 +216,9 @@ def prepare_job_promoter_stability(token, request):
     additional_params = dict()
     ssRNA_fasta = request.files['ssRNA_fasta']
     species = request.args.get('species')
-    genes_all = request.form["genes_all"]
-    genes_interest = request.form["genes_interest"]
-
+    genes_all = request.form["genes_all"].split(",")
+    genes_interest = request.form["genes_interest"].split(",")
+    
     if (species):
         additional_params["species"] = species
     else:
@@ -244,6 +244,7 @@ promoter_tpx_stability_test:
                 min_genes_in_set: 5
                 nperm: 1000
                 gsea_weight: 0
+        plot_format: "png"
 genome_fasta: {genome_fasta}
 tss_ref_bed: {tss_ref_bed}
 transcript_fastas: {transcript_fastas}
@@ -281,7 +282,7 @@ ln -s {CONFIG_SK} {output_dir}/config.smk;
 echo \"{config_formatted}\" > {output_dir}/config.yaml;
 """
     #Build rule   
-    rule=f"snakemake -p {SLURM_CONFIG} run_promoter_tpx_stability_test --report report.html >> {output_dir}/STDOUT 2>>{output_dir}/STDERR"
+    rule=f"snakemake -p {SLURM_CONFIG} run_promoter_tpx_stability_test >> {output_dir}/STDOUT 2>>{output_dir}/STDERR"
 
     #Assemble the complete command...............................................
     command = f"{setting_up} {link_files} \n {rule} "
@@ -292,6 +293,7 @@ echo \"{config_formatted}\" > {output_dir}/config.yaml;
 #Receive new promoter_stability test job
 @app.post("/submit_promoter_test/<token>")
 def submit_job_promoter_stability_test(token):
+    print("Received")
     try:
         hmac = request.args.get('hmac')
         verified = verify_hmac(token, hmac)
@@ -302,35 +304,38 @@ def submit_job_promoter_stability_test(token):
         return job_already_submitted_exception(token)
     except BadParameterException as e:
         return config_params_missing(token)
-
-
+    except Exception as e:
+        print(e)
+        return config_params_missing(token)
     #If no exceptions so far, can return a response
     response = Response( f"Job with token {token} received" )
-
+    output_dir = jobData["output_dir"]
+    ssRNA = jobData["ssRNA_filename"]
     files_to_send = [
-        #{"name": "SUMMARY", "path": f"{output_dir}/{ssRNA}_ssmasked-{dsDNA}.tpx.summary.add_zeros.gz"},
-    ]
-    """
-    ssRNA_ssmasked-genes_all.tss.tpx.stability.gz
-    ssRNA_ssmasked-genes_all.tss.tpx.summary.add_zeros.gz
-    ssRNA_Stability_best_rnk.gz
-    ssRNA_Stability_norm_rnk.gz
-    results/ssRNA/
-        Stability_best and Stability_norm
-            fgseaRes.tsv
-            leading_edge.tsv
-            enrichment_plot.png
-            stability_comp_boxplot.png
-            stability_comp.tsv
-    """
+        {"name": "SUMMARY", "path": f"{output_dir}/{ssRNA}_ssmasked-genes_all.tss.tpx.stability.gz"},
+        {"name": "STABILITY", "path": f"{output_dir}/{ssRNA}_ssmasked-genes_all.tss.tpx.stability.gz"},
+        {"name": "STABILITY_BEST", "path": f"{output_dir}/{ssRNA}_Stability_best_rnk.gz"},
+        {"name": "STABILITY_NORM", "path": f"{output_dir}/{ssRNA}_Stability_norm_rnk.gz"},
 
+        {"name": "STABILITY_BEST_FGSEA_RES", "path": f"{output_dir}/results/{ssRNA}/Stability_best/fgseaRes.tsv"},
+        {"name": "STABILITY_BEST_LEADING_EDGE", "path": f"{output_dir}/results/{ssRNA}/Stability_best/leading_edge.tsv"},
+        {"name": "STABILITY_BEST_ENRICHMENT_PLOT", "path": f"{output_dir}/results/{ssRNA}/Stability_best/enrichment_plot.png"},
+        {"name": "STABILITY_BEST_STABILITY_COMP_BOXPLOT", "path": f"{output_dir}/results/{ssRNA}/Stability_best/stability_comp_boxplot.png"},
+        {"name": "STABILITY_BEST_STABILITY_COMP", "path": f"{output_dir}/results/{ssRNA}/Stability_best/stability_comp.tsv"},
+        {"name": "STABILITY_NORM_FGSEA_RES", "path": f"{output_dir}/results/{ssRNA}/Stability_norm/fgseaRes.tsv"},
+        {"name": "STABILITY_NORM_LEADING_EDGE", "path": f"{output_dir}/results/{ssRNA}/Stability_norm/leading_edge.tsv"},
+        {"name": "STABILITY_NORM_ENRICHMENT_PLOT", "path": f"{output_dir}/results/{ssRNA}/Stability_norm/enrichment_plot.png"},
+        {"name": "STABILITY_NORM_STABILITY_COMP_BOXPLOT", "path": f"{output_dir}/results/{ssRNA}/Stability_norm/stability_comp_boxplot.png"},
+        {"name": "STABILITY_NORM_STABILITY_COMP", "path": f"{output_dir}/results/{ssRNA}/Stability_norm/stability_comp.tsv"},
+    ]
     #After returning response, execute command
     @response.call_on_close
     def on_close():
         pid = os.fork()
         if (pid <= 0):
             print(f"Child process with pid {pid} starts 3plex")
-            call_on_close(token, jobData["command"],jobData["output_dir"],jobData["ssRNA_filename"],jobData["dsDNA_filename"], jobData["random"], DEBUG=jobData['DEBUG'], files_to_send=files_to_send)
+            api_names = ["submitresult_promoter", "submiterror_promoter"]
+            call_on_close(token, jobData["command"],jobData["output_dir"], False, DEBUG=jobData['DEBUG'], files_to_send=files_to_send, api_names = api_names)
         else:
             print(f"Parent (worker) process with pid {pid} has finished its job")
         exit()
@@ -346,7 +351,7 @@ def run_test(token, request):
         sys.stderr.write("Bad params\n")
         return False
 
-    return call_on_close(token, jobData["command"],jobData["output_dir"],jobData["ssRNA_filename"],jobData["dsDNA_filename"], TEST=True)
+    return call_on_close(token, jobData["command"],jobData["output_dir"], TEST=True)
 
 def run_test_promoter_stability(token, request):
     try:
@@ -358,4 +363,4 @@ def run_test_promoter_stability(token, request):
         sys.stderr.write("Bad params\n")
         return False
 
-    return call_on_close(token, jobData["command"],jobData["output_dir"],jobData["ssRNA_filename"], None, TEST=True)
+    return call_on_close(token, jobData["command"],jobData["output_dir"], TEST=True)

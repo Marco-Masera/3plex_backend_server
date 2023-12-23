@@ -56,8 +56,8 @@ def main():
         request["args"]["species"] = args.species
 
     #Set test background and putative gene list
-    request["form"]["genes_all"] = ["TSPAN6","CFH","FUCA2","ENPP4","SEMA3F"]
-    request["form"]["genes_interest"] = ["TSPAN6","CFH","FUCA2"]
+    request["form"]["genes_all"] = ",".join(["TSPAN6","CFH","FUCA2","ENPP4","SEMA3F"])
+    request["form"]["genes_interest"] = ",".join(["TSPAN6","CFH","FUCA2"])
 
     #Rebuild into dotDict
     request["args"] = DotDict.from_dict(request["args"])

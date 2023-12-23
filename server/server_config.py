@@ -17,8 +17,7 @@ BIN_PATH = os.path.join(CURRENT_PATH, "3plex", "local", "bin")
 CONDA_ENV_PATH = os.path.join(CURRENT_PATH, "3plex", "local", "envs", "3plex") 
 #Other params
 def get_server_url(is_debug):
-    print(f"Debug is {is_debug} - debug server: {FRONTEND_SERVER_URL_DEBUG} - standard: {FRONTEND_SERVER_URL}")
-    if (is_debug==True):
+    if (is_debug==True or is_debug=="True"):
         return FRONTEND_SERVER_URL_DEBUG
     else:
         return FRONTEND_SERVER_URL
