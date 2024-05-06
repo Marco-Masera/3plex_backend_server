@@ -46,3 +46,4 @@ yte==1.5.1
 zipp==3.15.0
 gunicorn
 pytest
+flask

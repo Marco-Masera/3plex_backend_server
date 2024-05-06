@@ -128,7 +128,7 @@ def prepare_job(token, request):
         
     #Now need to build the string containing the command to execute in shell:
     #Setting up: prepare environment to execute the snakemake rules
-    setting_up = setting_up + f"""{CONDA_SETUP} \n  conda activate {CONDA_ENV_PATH}
+    setting_up = setting_up + f"""{CONDA_SETUP} \n  micromamba activate 3plex
         export PATH={BIN_PATH}:$PATH;\n
         export PRJ_ROOT={os.path.join(CURRENT_PATH, "3plex")};\n"""
     #Need to link files inside the working directory
@@ -271,7 +271,7 @@ transcript_fastas: {transcript_fastas}
         
     #Now need to build the string containing the command to execute in shell:
     #Setting up: prepare environment to execute the snakemake rules
-    setting_up = setting_up + f"""{CONDA_SETUP} \n  conda activate {CONDA_ENV_PATH}
+    setting_up = setting_up + f"""{CONDA_SETUP} \n  micromamba activate 3plex
         export PATH={BIN_PATH}:$PATH;\n
         export PRJ_ROOT={os.path.join(CURRENT_PATH, "3plex")};\n"""
     #Need to link files inside the working directory

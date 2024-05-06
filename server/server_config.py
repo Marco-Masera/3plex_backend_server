@@ -9,12 +9,11 @@ DEBUG_SKIP_SERVER_AUTHENTICATION = False
 #BASE VARIABLES
 CURRENT_PATH = os.path.dirname(os.path.realpath(__file__))
 TARGET_DSDNA_PATH = os.path.join(CURRENT_PATH, "local", "data", "target_dsdna")
-SNAKEFILE_PATH = os.path.join(CURRENT_PATH, "3plex", "local", "rules", "Snakefile")
-CONFIG_PATH = os.path.join(CURRENT_PATH, "3plex", "local", "config", "config_general.yaml")
-CONFIG_SK = os.path.join(CURRENT_PATH, "3plex", "local", "config", "config.smk")
-WORKING_DIR_PATH = os.path.join(CURRENT_PATH, "3plex", "dataset", "jobs")
-BIN_PATH = os.path.join(CURRENT_PATH, "3plex", "local", "bin")
-CONDA_ENV_PATH = os.path.join(CURRENT_PATH, "3plex", "local", "envs", "3plex") 
+SNAKEFILE_PATH = os.path.join(CURRENT_PATH, "3plex_singularity", "3plex", "local", "rules", "Snakefile")
+CONFIG_PATH = os.path.join(CURRENT_PATH, "3plex_singularity","3plex", "local", "config", "config_general.yaml")
+CONFIG_SK = os.path.join(CURRENT_PATH, "3plex_singularity","3plex", "local", "config", "config.smk")
+WORKING_DIR_PATH = os.path.join(CURRENT_PATH, "3plex_singularity", "3plex", "dataset", "jobs")
+BIN_PATH = os.path.join(CURRENT_PATH, "3plex_singularity","3plex", "local", "bin")
 #Other params
 def get_server_url(is_debug):
     if (is_debug==True or is_debug=="True"):

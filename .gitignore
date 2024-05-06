@@ -4,6 +4,6 @@ server/.snakemake
 *.pyc
 **/__pycache__/
 server/tests/.snakemake
-3plex_singularity/3plex
-3plex_singularity/3plex.sif
-3plex_singularity/3plex_cont
+server/3plex_singularity/3plex
+server/3plex_singularity/3plex.sif
+server/3plex_singularity/3plex_cont
