@@ -1,0 +1,45 @@
+Bootstrap: library
+From: ubuntu
+
+%files
+	3plex /3plex
+    3plex/local/envs/3plex.yaml /3plex/3plex.yaml
+    entrypoint.sh /3plex/entrypoint.sh
+    post.bash /opt/post.bash
+
+%environment
+	export PROMPT_COMMAND='source /opt/mamba/init.bash; unset PROMPT_COMMAND'
+
+%post
+    apt-get update && apt-get install -y curl cmake gcc build-essential libgomp1 libboost-all-dev vim ssh-client wget unzip python3 python3-yaml git gawk && apt-get clean
+    # ....................
+    # Install Mamba (Conda alternative) through Mambaforge
+	readonly mamba_installer="Mambaforge-$(uname)-$(uname -m).sh"
+	readonly mamba_version="4.10.3-4"
+	readonly mamba_prefix="/opt/mamba"
+	wget "https://github.com/conda-forge/miniforge/releases/download/${mamba_version}/${mamba_installer}"
+	bash "${mamba_installer}" -b -p "${mamba_prefix}"
+	rm "${mamba_installer}"
+    {
+		echo 'eval "$(' "'${mamba_prefix}/bin/conda' 'shell.bash' 'hook' 2> /dev/null" ')"'
+		echo 'if [ $? -eq 0 ]; then'
+		echo '  eval "$__conda_setup"'
+		echo 'else'
+		echo '  if [ -f ' "'${mamba_prefix}/etc/profile.d/conda.sh'" ']; then'
+		echo '    .' "'${mamba_prefix}/opt/mamba/etc/profile.d/conda.sh'"
+		echo '  else'
+		echo '    export PATH="/opt/mamba/bin:$PATH"'
+		echo '  fi'
+		echo 'fi'
+		echo 'unset __conda_setup'
+	} >> ${mamba_prefix}/init.bash
+    echo 'source' "'${mamba_prefix}/init.bash'" | cat - /opt/post.bash | bash
+    # ....................
+    git clone https://github.com/UDC-GAC/pato
+    cd pato && make gnu -
+    mkdir /opt/bin/
+    mv /pato/target/gnu/pato.release /opt/bin/pato
+	chmod 777 /3plex/entrypoint.sh
+
+%runscript
+    /3plex/entrypoint.sh "$@"

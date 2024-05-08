@@ -110,7 +110,7 @@ def prepare_job(token, request):
     if (output_dir[-1]=="/"): output_dir = output_dir[:-1]
     os.makedirs(output_dir)
 
-    setting_up = f"cd {output_dir};\n"
+    setting_up = f"cd {output_dir} && "
 
     #Unzip ssRNA if zipped!
     if (secure_filename(ssRNA_fasta.filename).split('.')[-1]=="gz"):
@@ -127,10 +127,6 @@ def prepare_job(token, request):
     
         
     #Now need to build the string containing the command to execute in shell:
-    #Setting up: prepare environment to execute the snakemake rules
-    setting_up = setting_up + f"""{CONDA_SETUP} \n  micromamba activate 3plex
-        export PATH={BIN_PATH}:$PATH;\n
-        export PRJ_ROOT={os.path.join(CURRENT_PATH, "3plex")};\n"""
     #Need to link files inside the working directory
     link_files = f"""
 ln -s {SNAKEFILE_PATH} {output_dir};
@@ -146,23 +142,17 @@ echo \"{config_formatted}\" > {output_dir}/config.yaml;
     else:
         random_rule = ""
     #Build rule   
-    rule=f"""
-snakemake -p {SLURM_CONFIG} \
+    rule_snakemake=f"""
+ --cores {SNAKEMAKE_N_CPU} \
     {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.summary.add_zeros.gz \
     {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.stability.gz \
     {ssRNA_filename}_secondary_structure.msgpack {ssRNA_filename}.profile_range.msgpack\
-    {random_rule} >> {output_dir}/STDOUT 2>>{output_dir}/STDERR
+    {random_rule}
 """
-    rule_no_srun=f"""
-snakemake -c1 \
-    {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.summary.add_zeros.gz \
-    {ssRNA_filename}_ssmasked-{dsDNA_filename}.tpx.stability.gz \
-    {ssRNA_filename}_secondary_structure.msgpack {ssRNA_filename}.profile_range.msgpack\
-    {random_rule} >> {output_dir}/STDOUT 2>>{output_dir}/STDERR
-"""
+    rule_slurm = f"""sbatch -p {SLURM_PARTITION} --cpus-per-task {SNAKEMAKE_N_CPU} --wait --wrap='singularity run -B{BIOINFOTREE_PATH}:{BIOINFOTREE_PATH}:ro -B {TRIPLEX_PATH}:{TRIPLEX_PATH} {CONTAINER_PATH} "{output_dir}" "{rule_snakemake}" ' """
 
     #Assemble the complete command...............................................
-    command = f"{setting_up} {link_files} \n {rule} "
+    command = f"{setting_up} {link_files} \n{rule_slurm} "
 
     return {"command": command, token: "token", "output_dir": output_dir, 
         "ssRNA_filename": ssRNA_filename, "dsDNA_filename": dsDNA_filename, "random": use_randomization>0,
@@ -269,11 +259,6 @@ transcript_fastas: {transcript_fastas}
     with open(f"{output_dir}/genes_of_interest.txt", "w") as genes_interest_file:
         genes_interest_file.write("\n".join(genes_interest))
         
-    #Now need to build the string containing the command to execute in shell:
-    #Setting up: prepare environment to execute the snakemake rules
-    setting_up = setting_up + f"""{CONDA_SETUP} \n  micromamba activate 3plex
-        export PATH={BIN_PATH}:$PATH;\n
-        export PRJ_ROOT={os.path.join(CURRENT_PATH, "3plex")};\n"""
     #Need to link files inside the working directory
     link_files = f"""
 ln -s {SNAKEFILE_PATH} {output_dir};
@@ -282,10 +267,12 @@ ln -s {CONFIG_SK} {output_dir}/config.smk;
 echo \"{config_formatted}\" > {output_dir}/config.yaml;
 """
     #Build rule   
-    rule=f"snakemake -p {SLURM_CONFIG} run_promoter_tpx_stability_test >> {output_dir}/STDOUT 2>>{output_dir}/STDERR"
+    rule_snakemake=f" --cores {SNAKEMAKE_N_CPU} run_promoter_tpx_stability_test"
+    rule_slurm = f"""sbatch -p {SLURM_PARTITION} --cpus-per-task {SNAKEMAKE_N_CPU} --wait --wrap='singularity run -B{BIOINFOTREE_PATH}:{BIOINFOTREE_PATH}:ro -B {TRIPLEX_PATH}:{TRIPLEX_PATH} {CONTAINER_PATH} "{output_dir}" "{rule_snakemake}" ' """
 
     #Assemble the complete command...............................................
-    command = f"{setting_up} {link_files} \n {rule} "
+    command = f"{setting_up} {link_files} \n{rule_slurm} "
+
 
     return {"command": command, token: "token", "output_dir": output_dir, 
         "ssRNA_filename": ssRNA_filename, "DEBUG": DEBUG}
