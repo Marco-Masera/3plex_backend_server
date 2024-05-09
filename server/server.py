@@ -23,7 +23,10 @@ def verify_hmac(token_, received_hmac):
         digested = h.hexdigest()
         return digested == received_hmac
     return get_time_based_otp(token_, 0) or get_time_based_otp(token_, -1) or get_time_based_otp(token_, -2)
-    
+
+def print_if_not_quiet(value):
+    if not QUIET_MODE:
+        print(value)
 
 @pytest.fixture()
 def client(app):
@@ -194,10 +197,10 @@ def submit_job(token):
     def on_close():
         pid = os.fork()
         if (pid <= 0):
-            print(f"Child process with pid {pid} starts 3plex")
+            print_if_not_quiet(f"Child process with pid {pid} starts 3plex")
             call_on_close(token, jobData["command"],jobData["output_dir"], jobData["random"], DEBUG=jobData['DEBUG'], files_to_send=files_to_send)
         else:
-            print(f"Parent (worker) process with pid {pid} has finished its job")
+            print_if_not_quiet(f"Parent (worker) process with pid {pid} has finished its job")
         exit()
     return response
 
@@ -280,7 +283,7 @@ echo \"{config_formatted}\" > {output_dir}/config.yaml;
 #Receive new promoter_stability test job
 @app.post("/submit_promoter_test/<token>")
 def submit_job_promoter_stability_test(token):
-    print("Received")
+    print_if_not_quiet("Received new promoter test")
     try:
         hmac = request.args.get('hmac')
         verified = verify_hmac(token, hmac)
@@ -320,11 +323,11 @@ def submit_job_promoter_stability_test(token):
     def on_close():
         pid = os.fork()
         if (pid <= 0):
-            print(f"Child process with pid {pid} starts 3plex")
+            print_if_not_quiet(f"Child process with pid {pid} starts 3plex")
             api_names = ["submitresult_promoter", "submiterror_promoter"]
             call_on_close(token, jobData["command"],jobData["output_dir"], False, DEBUG=jobData['DEBUG'], files_to_send=files_to_send, api_names = api_names)
         else:
-            print(f"Parent (worker) process with pid {pid} has finished its job")
+            print_if_not_quiet(f"Parent (worker) process with pid {pid} has finished its job")
         exit()
     return response
 
@@ -351,3 +354,4 @@ def run_test_promoter_stability(token, request):
         return False
 
     return call_on_close(token, jobData["command"],jobData["output_dir"], TEST=True)
+

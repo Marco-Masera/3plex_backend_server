@@ -1,0 +1,17 @@
+[Unit]
+Description=3plex backend server
+After=network.target
+
+[Service]
+User=mmasera
+Group=molinerislab
+WorkingDirectory=/home/mmasera/3plex_backend_server/server
+Environment="PATH=/home/mmasera/3plex_backend_server/server/env/bin:/usr/local/go/bin:/opt/mamba/bin:/home/mmasera/.vscode-server/cli/servers/Stable-b58957e67ee1e712cebf466b995adf4c5307b2bd/server/bin/remote-cli:/home/mmasera/.local/bin:/usr/local/go/bin:/opt/mamba/bin:/opt/conda/miniconda3/bin:/opt/conda/miniconda3/condabin:/opt/conda/miniconda3/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games:/opt/bin:/home/mmasera/go/binexport:/opt/bin:/home/mmasera/go/binexport"
+ExecStart=/home/mmasera/3plex_backend_server/server/env/bin/gunicorn -w 6 -b :5000 'server:app'
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

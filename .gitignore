@@ -7,3 +7,4 @@ server/tests/.snakemake
 server/3plex_container/3plex
 server/3plex_container/container.sif
 server/3plex_container/container
+server/job_data

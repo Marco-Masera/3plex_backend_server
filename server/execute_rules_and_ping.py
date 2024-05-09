@@ -6,6 +6,9 @@ import shutil
 import os
 from server_config import *
 
+def print_if_not_quiet(value):
+    if not QUIET_MODE:
+        print(value)
 
 def get_hashed(token):
     h = hmac.new(bytes(HMAC_KEY, 'utf-8'), msg=bytes(token, 'utf-8'), digestmod='sha256')
@@ -14,22 +17,18 @@ def get_hashed(token):
 
 def execute_command(cmd, path):
     return_code = -1
-    print(f"\nExecuting task: {cmd}\n")
+    print_if_not_quiet(f"\nExecuting task: {cmd}\n")
     try:
         cwd = tempfile.mkdtemp(path)
         with subprocess.Popen(['/bin/bash', '-c', cmd], cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, bufsize=1) as p:
-            """print("Stdout:")
-            for line in p.stdout:
-                print(line)
-            print("Stderr:")
-            for line in p.stderr:
-                print(line)"""
             return_code = p.wait()
     finally:
         try:
             shutil.rmtree(cwd)
         except Exception:
             pass
+    if return_code != 0:
+        print(f"\Failed to execute task: {cmd}\n")
     return return_code
  
 def ping_job_failed(token, output_dir, htoken, SERVER_URL_G, api_name="submiterror"):
@@ -43,7 +42,6 @@ def ping_job_failed(token, output_dir, htoken, SERVER_URL_G, api_name="submiterr
             break
         tries += 1
         sleep(300)
-    #r = execute_command(f"rm -rf {output_dir}", token)
 
 def ping_job_succeeded(token, output_dir, htoken, use_random=False, SERVER_URL_G="", files_to_send={}, api_name="submitresult"):
     tries = 0

@@ -24,6 +24,15 @@ Most likely you won't have to modify them; in case the file is commented and it 
 
 ## Launch server
 ### Create virtualenv
+* cd server
 * python3 -m venv env
 * source env/bin/activate
 * python3 -m pip install -r requirements.txt
+
+### Launch server inside tmux (debug only)
+* cd server
+* source env/bin/activate
+* gunicorn -w 6 -b :5000 'server:app'
+
+### Launch as system service
+TODO
