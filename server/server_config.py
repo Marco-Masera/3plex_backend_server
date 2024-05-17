@@ -5,7 +5,7 @@ from  server_config_local import *
 DELETE_JOB_DIRECTORY_AFTER_SUCCESS = True
 DEBUG_SKIP_SERVER_AUTHENTICATION = False
 #In quiet mode, the server prints only when something goes wrong. Without quiet mode it prints every command it runs.
-QUIET_MODE = False
+QUIET_MODE = True
 
 #RELATIVE PATH VARIABLES - these are unlikely to be changed
 CURRENT_PATH = os.path.dirname(os.path.realpath(__file__))
