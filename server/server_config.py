@@ -13,7 +13,7 @@ SNAKEFILE_PATH = os.path.join(CURRENT_PATH, "3plex_container", "3plex", "local",
 CONFIG_PATH = os.path.join(CURRENT_PATH, "3plex_container","3plex", "local", "config", "config_general.yaml")
 CONTAINER_PATH = os.path.join(CURRENT_PATH, "3plex_container","3plex_cont")
 CONFIG_SK = os.path.join(CURRENT_PATH, "3plex_container","3plex", "local", "config", "config.smk")
-CONTAINER_PATH = os.path.join(CURRENT_PATH, "3plex_container", "container.sif")
+CONTAINER_PATH = os.path.join(CURRENT_PATH, "3plex_container", "container")
 TRIPLEX_PATH = os.path.join(CURRENT_PATH, "3plex_container", "3plex")
 #Modify this to specify where to keep temporary job data
 WORKING_DIR_PATH = os.path.join(CURRENT_PATH, "job_data")

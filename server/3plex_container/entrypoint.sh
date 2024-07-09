@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export PATH=/opt/mamba/bin:$PATH && \
+export PATH= /opt/mamba/envs/3plex/bin:/opt/mamba/bin:$PATH && \
 export mamba_prefix=/opt/mamba
 __conda_setup="$('/opt/mamba/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
 if [ $? -eq 0 ]; then
@@ -12,7 +12,7 @@ else
         export PATH="/opt/mamba/bin:$PATH"
     fi
 fi
-conda activate 3plex
+conda activate /opt/mamba/envs/3plex
 
 working_directory="$1"
 shift 1

@@ -35,4 +35,5 @@ Most likely you won't have to modify them; in case the file is commented and it 
 * gunicorn -w 6 -b :5000 'server:app'
 
 ### Launch as system service
-TODO
+* cd deploy
+* make deploy
