@@ -19,5 +19,6 @@ shift 1
 snake_cmd=$1
 
 export PATH=$PATH:/3plex/local/bin
+#export PATH=$PATH:$PWD/3plex/local/bin
 export PRJ_ROOT=/3plex
 snakemake $snake_cmd >> $working_directory/STDOUT 2>> $working_directory/STDERR

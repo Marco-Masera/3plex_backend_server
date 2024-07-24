@@ -302,20 +302,20 @@ def submit_job_promoter_stability_test(token):
     output_dir = jobData["output_dir"]
     ssRNA = jobData["ssRNA_filename"]
     files_to_send = [
-        {"name": "SUMMARY", "path": f"{output_dir}/{ssRNA}_ssmasked-genes_all.tss.tpx.stability.gz"},
+        {"name": "SUMMARY", "path": f"{output_dir}/{ssRNA}_ssmasked-genes_all.tss.tpx.summary.add_zeros.gz"},
         {"name": "STABILITY", "path": f"{output_dir}/{ssRNA}_ssmasked-genes_all.tss.tpx.stability.gz"},
-        {"name": "STABILITY_BEST", "path": f"{output_dir}/{ssRNA}_Stability_best_rnk.gz"},
-        {"name": "STABILITY_NORM", "path": f"{output_dir}/{ssRNA}_Stability_norm_rnk.gz"},
+        {"name": "STABILITY_BEST", "path": f"{output_dir}/{ssRNA}-Stability_best-rnk.gz"},
+        {"name": "STABILITY_NORM", "path": f"{output_dir}/{ssRNA}-Stability_norm-rnk.gz"},
 
         {"name": "STABILITY_BEST_FGSEA_RES", "path": f"{output_dir}/results/{ssRNA}/Stability_best/fgseaRes.tsv"},
         {"name": "STABILITY_BEST_LEADING_EDGE", "path": f"{output_dir}/results/{ssRNA}/Stability_best/leading_edge.tsv"},
-        {"name": "STABILITY_BEST_ENRICHMENT_PLOT", "path": f"{output_dir}/results/{ssRNA}/Stability_best/enrichment_plot.png"},
-        {"name": "STABILITY_BEST_STABILITY_COMP_BOXPLOT", "path": f"{output_dir}/results/{ssRNA}/Stability_best/stability_comp_boxplot.png"},
+        {"name": "STABILITY_BEST_ENRICHMENT_PLOT", "path": f"{output_dir}/results/{ssRNA}/Stability_best/enrichment_plot.pdf"},
+        {"name": "STABILITY_BEST_STABILITY_COMP_BOXPLOT", "path": f"{output_dir}/results/{ssRNA}/Stability_best/stability_comp_boxplot.pdf"},
         {"name": "STABILITY_BEST_STABILITY_COMP", "path": f"{output_dir}/results/{ssRNA}/Stability_best/stability_comp.tsv"},
         {"name": "STABILITY_NORM_FGSEA_RES", "path": f"{output_dir}/results/{ssRNA}/Stability_norm/fgseaRes.tsv"},
         {"name": "STABILITY_NORM_LEADING_EDGE", "path": f"{output_dir}/results/{ssRNA}/Stability_norm/leading_edge.tsv"},
-        {"name": "STABILITY_NORM_ENRICHMENT_PLOT", "path": f"{output_dir}/results/{ssRNA}/Stability_norm/enrichment_plot.png"},
-        {"name": "STABILITY_NORM_STABILITY_COMP_BOXPLOT", "path": f"{output_dir}/results/{ssRNA}/Stability_norm/stability_comp_boxplot.png"},
+        {"name": "STABILITY_NORM_ENRICHMENT_PLOT", "path": f"{output_dir}/results/{ssRNA}/Stability_norm/enrichment_plot.pdf"},
+        {"name": "STABILITY_NORM_STABILITY_COMP_BOXPLOT", "path": f"{output_dir}/results/{ssRNA}/Stability_norm/stability_comp_boxplot.pdf"},
         {"name": "STABILITY_NORM_STABILITY_COMP", "path": f"{output_dir}/results/{ssRNA}/Stability_norm/stability_comp.tsv"},
     ]
     #After returning response, execute command
