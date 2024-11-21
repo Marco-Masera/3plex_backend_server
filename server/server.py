@@ -107,6 +107,21 @@ def prepare_job(token, request):
     #First argument contains the form with 3plex parameters, second is a dict of any additional param
     #that does not belong to "triplexator:"
     config_formatted = parse_config(request.form, additional_params)
+    config_formatted = config_formatted + f"""
+promoter_tpx_stability_test:
+        ssRNA: "path/to/ssrna"
+        genes_all: "path/to/gall"
+        genes_of_interest: "path/to/gi"
+        score:
+            - Stability_best
+            - Stability_norm
+        gsea:
+            max_genes_in_set: 10000
+            min_genes_in_set: 5
+            nperm: 1000
+        gsea_weight: 0
+        plot_format: "null"
+    """
 
     #Create directory to execute the job..................................
     output_dir = os.path.join(WORKING_DIR_PATH, token)
